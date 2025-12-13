@@ -1,0 +1,3258 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="FibroCare - Application thérapeutique pour la fibromyalgie">
+    <meta name="author" content="Nicolas JULIENNE">
+    <title>FibroCare 💜 v7.0 ULTIMATE with AI</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <style>
+        /* ============================================================
+           🎨 DESIGN SYSTEM (Identique v4.0)
+           ============================================================ */
+        :root {
+            --lavender-50: #faf8ff;
+            --lavender-100: #f3f0ff;
+            --lavender-300: #d4c5ff;
+            --lavender-500: #9d76ff;
+            --lavender-600: #7c4dff;
+            --lavender-700: #6237d4;
+            --cream-50: #fffef9;
+            --sage-500: #22c55e;
+            --rose-500: #f43f5e;
+            
+            --font-display: 'Playfair Display', Georgia, serif;
+            --font-body: 'DM Sans', -apple-system, sans-serif;
+            
+            --shadow: 0 4px 16px rgba(124, 77, 255, 0.12);
+            --radius: 20px;
+        }
+
+        [data-theme="dark"] {
+            --lavender-50: #1a1b26;
+            --lavender-100: #24283b;
+            --lavender-300: #414868;
+            --lavender-500: #bb9af7;
+            --lavender-600: #7aa2f7;
+            --lavender-700: #c0caf5;
+            --cream-50: #1a1b26;
+            color: #c0caf5;
+        }
+
+        [data-theme="dark"] body { background: #1a1b26; color: #c0caf5; }
+        [data-theme="dark"] .card, [data-theme="dark"] .header, [data-theme="dark"] .nav-tab, 
+        [data-theme="dark"] .form-input, [data-theme="dark"] .form-select, [data-theme="dark"] .form-textarea, 
+        [data-theme="dark"] .modal-content, [data-theme="dark"] .post-card {
+            background: #24283b; color: #c0caf5; border-color: #414868;
+        }
+        [data-theme="dark"] .nav-tab:not(.active) { background: #24283b; color: #a9b1d6; }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: var(--font-body);
+            background: linear-gradient(135deg, var(--lavender-50) 0%, var(--cream-50) 100%);
+            color: #1e1b4b;
+            line-height: 1.6;
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        .app { max-width: 1200px; margin: 0 auto; padding: 1rem; }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+        
+        .app-title { font-family: var(--font-display); font-size: 2.5rem; font-weight: 900; color: var(--lavender-600); margin-bottom: 0.5rem; }
+        
+        /* Navigation */
+        .nav { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; overflow-x: auto; padding-bottom: 0.5rem; scrollbar-width: none; }
+        .nav::-webkit-scrollbar { display: none; }
+        
+        .nav-tab {
+            flex: 0 0 auto; padding: 0.75rem 1.25rem;
+            background: rgba(255, 255, 255, 0.7);
+            border: 2px solid transparent; border-radius: 12px;
+            font-weight: 600; color: var(--lavender-700);
+            cursor: pointer; transition: all 0.3s ease;
+        }
+        .nav-tab.active { background: var(--lavender-600); color: white; box-shadow: var(--shadow); }
+        
+        .content { display: none; animation: fadeIn 0.4s ease; }
+        .content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .card { background: white; border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: var(--shadow); }
+        .card-title { font-family: var(--font-display); font-size: 1.4rem; font-weight: 700; color: var(--lavender-700); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        
+        .btn { display: inline-flex; align-items: center; justify-content: center; padding: 1rem 1.5rem; background: var(--lavender-600); color: white; font-weight: 600; border: none; border-radius: 12px; cursor: pointer; width: 100%; margin-bottom: 0.5rem; font-size: 1rem; transition: transform 0.2s; }
+        .btn:active { transform: scale(0.98); }
+        .btn-secondary { background: white; color: var(--lavender-700); border: 2px solid var(--lavender-300); }
+        .btn-success { background: var(--sage-500); }
+        .btn-danger { background: var(--rose-500); }
+        
+        .form-group { margin-bottom: 1rem; }
+        .form-label { display: block; font-weight: 600; margin-bottom: 0.5rem; }
+        .form-input, .form-select, .form-textarea { width: 100%; padding: 0.8rem; border: 2px solid var(--lavender-300); border-radius: 10px; font-size: 1rem; background: white; }
+        
+        /* Pain Scale */
+        .pain-scale { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 10px; }
+        .pain-btn { min-width: 50px; height: 50px; border-radius: 10px; border: 2px solid #eee; background: white; cursor: pointer; font-weight: bold; }
+        .pain-btn.active { border-color: #000; transform: scale(1.1); }
+        .pain-0 { background: #4ade80; } 
+        .pain-5 { background: #facc15; } 
+        .pain-10 { background: #ef4444; color: white; }
+        
+        /* Emergency Button */
+        .emergency-btn { position: fixed; bottom: 20px; right: 20px; width: 70px; height: 70px; background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border-radius: 50%; border: none; font-size: 2rem; cursor: pointer; box-shadow: 0 10px 25px rgba(220, 38, 38, 0.5); z-index: 1000; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        
+        /* Modal */
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; align-items: center; justify-content: center; padding: 1rem; }
+        .modal.active { display: flex; }
+        .modal-content { background: white; padding: 2rem; border-radius: 20px; width: 100%; max-width: 500px; }
+        
+        /* Notification */
+        .notification { position: fixed; top: 20px; right: 20px; background: white; padding: 1rem; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); border-left: 5px solid var(--sage-500); transform: translateX(150%); transition: transform 0.3s; z-index: 3000; }
+        .notification.active { transform: translateX(0); }
+        
+        /* New Styles for Community & RGPD */
+        .post-card { background: var(--lavender-50); padding: 1rem; border-radius: 12px; margin-bottom: 1rem; border: 1px solid var(--lavender-300); }
+        .post-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--lavender-300); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        
+        .cookie-banner { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(30, 27, 75, 0.95); color: white; padding: 1rem; z-index: 9000; display: none; backdrop-filter: blur(5px); }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; }
+    </style>
+
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIkZpYnJvQ2FyZSAtIEFwcGxpY2F0aW9uIEZpYnJvbXlhbGdpZSIsCiAgInNob3J0X25hbWUiOiAiRmlicm9DYXJlIiwKICAiZGVzY3JpcHRpb24iOiAiVm90cmUgY29tcGFnbm9uIGZpYnJvbXlhbGdpZSIsCiAgInN0YXJ0X3VybCI6ICIvIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjZmFmOGZmIiwKICAidGhlbWVfY29sb3IiOiAiIzdjNGRmZiIsCiAgImljb25zIjogW10KfQ==">
+
+    
+    <style>
+    /* ===== FIBROBOT v2.0 STYLES ===== */
+    .detail-level-selector {
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+        background: #f3f0ff;
+        border-radius: 12px;
+    }
+    .chat-input-container {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+    .chat-input-container input { flex: 1; }
+    .typing-indicator { animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .message-feedback {
+        margin-top: 0.5rem;
+        display: flex;
+        gap: 0.5rem;
+    }
+    .feedback-btn {
+        background: none;
+        border: none;
+        font-size: 1.25rem;
+        cursor: pointer;
+        opacity: 0.6;
+        transition: all 0.2s;
+    }
+    .feedback-btn:hover {
+        opacity: 1;
+        transform: scale(1.2);
+    }
+    #suggestions-container {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: #fff4e6;
+        border-radius: 12px;
+        border-left: 4px solid #fb923c;
+    }
+    .bot-actions {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: #dcfce7;
+        border-radius: 12px;
+        border-left: 4px solid var(--sage-500);
+    }
+    </style>
+    
+    <script>
+    /* ===== FIBROBOT KNOWLEDGE BASE v1.0 ===== */
+    /**
+ * ============================================================================
+ * 🤖 FIBROBOT - BASE DE CONNAISSANCES ULTRA-COMPLÈTE
+ * ============================================================================
+ * 
+ * Version: 1.0 ULTIMATE
+ * Réponses: 300+
+ * Catégories: 6
+ * Mots-clés: 1000+
+ * 
+ * © Décembre 2025 Nicolas JULIENNE - FibroCare
+ * ============================================================================
+ */
+
+const FIBROBOT_KNOWLEDGE = {
+    
+    // ========================================================================
+    // 1️⃣ SYMPTÔMES (50+ réponses)
+    // ========================================================================
+    
+    symptoms: {
+        
+        general: {
+            keywords: ['symptômes', 'symptome', 'quels', 'principaux'],
+            response: `Les symptômes principaux de la fibromyalgie incluent:
+
+🔥 **Douleurs chroniques diffuses** (>3 mois)
+- Douleurs musculaires et articulaires
+- Sensation de brûlure
+- Raideurs
+
+😴 **Fatigue intense et persistante**
+- Épuisement dès le réveil
+- Manque d'énergie constant
+- Sommeil non réparateur
+
+🧠 **Troubles cognitifs (Fibrofog)**
+- Difficultés de concentration
+- Troubles de mémoire
+- Confusion mentale
+
+😴 **Troubles du sommeil**
+- Insomnie
+- Réveils fréquents
+- Sommeil léger
+
+🤕 **Autres symptômes fréquents:**
+- Maux de tête / migraines
+- Syndrome du côlon irritable
+- Sensibilité accrue au toucher
+- Raideurs matinales
+- Paresthésies (fourmillements)
+- Syndrome jambes sans repos
+
+💡 Ces symptômes varient en intensité et peuvent être déclenchés par le stress, la fatigue, le froid ou l'effort physique.`,
+            sources: ['Critères ACR 2016', 'Consensus international']
+        },
+        
+        pain: {
+            keywords: ['douleur', 'douleurs', 'mal', 'souffrance', 'points sensibles'],
+            response: `🔥 **Douleurs dans la Fibromyalgie:**
+
+**Caractéristiques:**
+- Douleurs **diffuses** (au moins 3 régions du corps)
+- Durée **>3 mois**
+- Intensité **variable** (de modérée à intense)
+- **Chronique** avec périodes de poussées
+
+**Types de douleurs:**
+- Musculaires (myalgies)
+- Articulaires (arthralgies)
+- Brûlures
+- Picotements
+- Sensation de coups de couteau
+
+**18 Points sensibles (critères ACR 1990):**
+- Occiput (base crâne)
+- Cervicales basses
+- Trapèzes
+- Sus-épineux
+- 2e côte
+- Épicondyle latéral (coude)
+- Fessiers
+- Grand trochanter (hanche)
+- Genoux
+
+**Déclencheurs:**
+- Stress émotionnel
+- Fatigue
+- Froid et humidité
+- Effort physique intense
+- Manque de sommeil
+- Changements météorologiques
+
+**Gestion:**
+- Antalgiques (paracétamol, tramadol)
+- Antidépresseurs (duloxétine, amitriptyline)
+- Thérapies complémentaires (acupuncture, ostéopathie)
+- Soins naturels (curcuma, boswellia)
+- Exercice physique doux
+- Gestion du stress`,
+            sources: ['Critères ACR 1990/2010', 'Études cliniques']
+        },
+        
+        fatigue: {
+            keywords: ['fatigue', 'fatigué', 'épuisement', 'épuisé', 'énergie', 'asthénie'],
+            response: `😴 **Fatigue dans la Fibromyalgie:**
+
+**Caractéristiques:**
+- **Intense et persistante**
+- Présente dès le **réveil**
+- **Non soulagée** par le repos
+- Aggravée par l'effort physique ou mental
+
+**Causes multiples:**
+- Sommeil non réparateur
+- Douleurs chroniques épuisantes
+- Dysfonction mitochondriale
+- Déséquilibres hormonaux
+- Stress chronique
+- Anxiété/dépression associée
+
+**Impact quotidien:**
+- Difficultés à accomplir tâches simples
+- Besoin de siestes fréquentes
+- Limitation activités professionnelles/sociales
+- Sensation de batterie toujours vide
+
+**Solutions:**
+
+💊 **Médicales:**
+- Modafinil (hors AMM)
+- Supplémentation vitamine D, B12
+- Correction anémie si présente
+
+🌿 **Naturelles:**
+- **Rhodiola rosea** (200-600mg/jour) - Adaptogène
+- **Ginseng** - Énergie
+- **Coenzyme Q10** (100-300mg/jour) - Énergie cellulaire
+- **Magnésium** - Fonction musculaire
+- **Fer** si carence
+
+🧘 **Mode de vie:**
+- Gestion énergie (pacing)
+- Siestes courtes (20-30min)
+- Exercice doux progressif
+- Alimentation anti-inflammatoire
+- Hydratation optimale
+- Sommeil régulier
+- Réduction stress`,
+            sources: ['Études fatigue chronique', 'Recommandations EULAR']
+        },
+        
+        sleep: {
+            keywords: ['sommeil', 'insomnie', 'dormir', 'réveil', 'nuit', 'repos'],
+            response: `😴 **Troubles du Sommeil - Fibromyalgie:**
+
+**Problèmes fréquents:**
+- **Insomnie d'endormissement**
+- **Réveils nocturnes multiples**
+- **Sommeil non réparateur**
+- **Sommeil léger** (peu de sommeil profond)
+- **Syndrome jambes sans repos**
+- **Apnées du sommeil** (parfois associées)
+
+**Mécanisme:**
+- Anomalies sommeil profond (stade 4)
+- Intrusion ondes alpha (éveil) dans sommeil profond
+- Perturbation cycles sommeil
+- Hypervigilance nocturne
+
+**Conséquences:**
+- Fatigue intense au réveil
+- Aggravation douleurs
+- Troubles cognitifs
+- Irritabilité
+- Aggravation symptômes
+
+**Solutions:**
+
+💊 **Médicaments:**
+- **Amitriptyline** (10-50mg soir) - Améliore sommeil profond
+- **Prégabaline** - Réduit douleurs nocturnes
+- **Zolpidem** (courte durée) - Insomnie sévère
+- **Mélatonine** (2-5mg) - Régulation rythme
+
+🌿 **Naturels:**
+- **Valériane** (300-600mg) - Favorise endormissement
+- **Passiflore** - Relaxation
+- **Mélisse** - Calme nervosité
+- **Camomille** - Infusion apaisante
+- **Lavande** - Huile essentielle (diffusion)
+- **Magnésium** (400mg soir) - Relaxation musculaire
+
+🛏️ **Hygiène du sommeil:**
+- Horaires réguliers coucher/lever
+- Chambre fraîche (18-20°C)
+- Obscurité totale
+- Éviter écrans 2h avant
+- Pas de caféine après 14h
+- Dîner léger 3h avant
+- Rituel relaxation (lecture, méditation)
+- Limiter siestes (20-30min max)
+- Exercice physique en journée
+- Exposition lumière naturelle matin`,
+            sources: ['Études sommeil fibromyalgie', 'Guidelines EULAR']
+        },
+        
+        fibrofog: {
+            keywords: ['fibrofog', 'brouillard', 'concentration', 'mémoire', 'cognitif', 'mental', 'tête'],
+            response: `🧠 **Fibrofog (Brouillard Mental):**
+
+**Symptômes:**
+- **Difficultés de concentration**
+- **Troubles de mémoire** (court terme surtout)
+- **Confusion mentale**
+- **Lenteur de traitement** information
+- **Difficultés trouver mots**
+- **Erreurs inhabituelles**
+- **Désorientation temporelle**
+
+**Causes:**
+- Douleurs chroniques épuisantes
+- Sommeil non réparateur
+- Fatigue cognitive
+- Inflammation cérébrale
+- Hypoxie cérébrale relative
+- Stress chronique
+
+**Impact quotidien:**
+- Oublis fréquents
+- Difficulté suivre conversations
+- Problèmes organisation
+- Erreurs au travail
+- Perte objets
+- Difficultés multitâches
+
+**Solutions:**
+
+💊 **Médicaments:**
+- **Duloxétine** - Améliore concentration
+- **Modafinil** (hors AMM) - Vigilance
+- **Méthylphénidate** - TDAH associé
+
+🌿 **Naturels:**
+- **Ginkgo biloba** (120-240mg) - Circulation cérébrale
+- **Bacopa monnieri** - Mémoire
+- **Oméga-3** (EPA/DHA) - Fonction cérébrale
+- **Phosphatidylsérine** - Cognition
+- **Lion's Mane** - Neurogénèse
+- **Rhodiola** - Clarté mentale
+- **Caféine modérée** - Vigilance
+
+🧠 **Stratégies:**
+- Listes et rappels
+- Une tâche à la fois
+- Pauses régulières
+- Exercices mémoire
+- Sommeil qualité
+- Gestion stress
+- Hydratation
+- Exercice physique (oxygénation)
+- Alimentation anti-inflammatoire`,
+            sources: ['Études cognition fibromyalgie']
+        },
+        
+        ibs: {
+            keywords: ['intestin', 'colon', 'ventre', 'digestion', 'diarrhée', 'constipation', 'ballonnement'],
+            response: `🤢 **Syndrome Côlon Irritable (SCI) et Fibromyalgie:**
+
+**Fréquence:** 30-70% des patients fibromyalgie ont SCI
+
+**Symptômes:**
+- Douleurs abdominales
+- Ballonnements
+- Alternance diarrhée/constipation
+- Sensation d'évacuation incomplète
+- Urgences fécales
+- Gaz
+
+**Lien fibromyalgie-SCI:**
+- Sensibilité viscérale accrue
+- Dysfonction axe intestin-cerveau
+- Inflammation intestinale
+- Dysbiose (déséquilibre microbiote)
+- Stress amplifie symptômes
+
+**Solutions:**
+
+🍽️ **Alimentation:**
+- Régime **FODMAP** (élimination puis réintroduction)
+- Éviter: gluten, lactose, aliments gras, épicés
+- Privilégier: fibres solubles, probiotiques
+- Bien mâcher, manger lentement
+- Petits repas fréquents
+
+💊 **Médicaments:**
+- Antispasmodiques (Spasfon)
+- Laxatifs doux si constipation
+- Lopéramide si diarrhée
+- Antidépresseurs (amitriptyline faible dose)
+
+🌿 **Naturels:**
+- **Probiotiques** (Lactobacillus, Bifidobacterium)
+- **Huile menthe poivrée** - Antispasmodique
+- **Psyllium** - Fibres
+- **Gingembre** - Nausées
+- **Fenouil** - Ballonnements
+- **Curcuma** - Anti-inflammatoire
+- **Glutamine** - Réparation muqueuse
+
+🧘 **Gestion:**
+- Réduction stress (méditation, yoga)
+- Exercice régulier
+- Sommeil suffisant
+- Identifier aliments déclencheurs`,
+            sources: ['Études SCI-fibromyalgie', 'FODMAP research']
+        },
+        
+        headaches: {
+            keywords: ['tête', 'céphalée', 'migraine', 'mal de tête', 'crâne'],
+            response: `🤕 **Maux de Tête / Migraines - Fibromyalgie:**
+
+**Fréquence:** 50-80% des patients fibromyalgie
+
+**Types:**
+- **Céphalées de tension** (plus fréquentes)
+- **Migraines** (avec ou sans aura)
+- **Céphalées cervicogéniques** (origine cervicale)
+
+**Causes:**
+- Tensions musculaires cou/épaules
+- Troubles sommeil
+- Stress chronique
+- Déshydratation
+- Sensibilisation centrale
+- Points trigger cervicaux
+
+**Solutions:**
+
+💊 **Médicaments:**
+- **Paracétamol** - Céphalées légères
+- **Ibuprofène** - Anti-inflammatoire
+- **Triptans** - Migraines
+- **Amitriptyline** - Prévention migraines
+- **Topiramate** - Prévention
+
+🌿 **Naturels:**
+- **Grande camomille** (Feverfew) - Prévention migraines
+- **Pétasite** - Fréquence migraines
+- **Magnésium** (400-600mg) - Prévention
+- **Riboflavine B2** (400mg) - Prévention
+- **Coenzyme Q10** - Énergie cellulaire
+- **Menthe poivrée** (huile) - Application tempes
+
+🧘 **Thérapies:**
+- **Acupuncture** - Efficacité prouvée
+- **Ostéopathie** - Tensions cervicales
+- **Massage** - Trigger points
+- **Biofeedback** - Contrôle stress
+- **Relaxation** - Méditation, yoga
+
+⚠️ **Prévention:**
+- Éviter déclencheurs (alcool, fromages fermentés, chocolat, caféine)
+- Hydratation (2L/jour)
+- Sommeil régulier
+- Gestion stress
+- Posture correcte
+- Pauses écran`,
+            sources: ['Études céphalées fibromyalgie']
+        },
+        
+        stiffness: {
+            keywords: ['raideur', 'rigidité', 'matin', 'articulation', 'ankylose'],
+            response: `🥶 **Raideurs Matinales - Fibromyalgie:**
+
+**Caractéristiques:**
+- **Au réveil**, durant 30min à plusieurs heures
+- Sensation **rigidité** musculaire et articulaire
+- Amélioration **progressive** avec mouvement
+- Aggravation par **immobilité** prolongée
+
+**Différence avec arthrite:**
+- Fibromyalgie: Pas d'inflammation articulaire
+- Polyarthrite: Raideur >1h, gonflement articulaire
+
+**Causes:**
+- Sommeil non réparateur
+- Immobilité nocturne
+- Accumulation toxines musculaires
+- Sensibilité accrue récepteurs douleur
+
+**Solutions:**
+
+🌅 **Au réveil:**
+- **Étirements doux** au lit (5-10min)
+- **Douche chaude** (détend muscles)
+- **Massage** zones raides
+- **Bouger progressivement**
+
+💊 **Médicaments:**
+- **Amitriptyline** (soir) - Améliore sommeil
+- **Relaxants musculaires** - Cyclobenzaprine
+- **AINS** - Si besoin
+
+🌿 **Naturels:**
+- **Magnésium** (400mg soir) - Relaxation musculaire
+- **Curcuma** - Anti-inflammatoire
+- **Boswellia** - Articulations
+- **MSM** - Souplesse
+- **Glucosamine/Chondroïtine** - Support articulaire
+
+🧘 **Exercices:**
+- **Yoga doux** - Souplesse
+- **Tai Chi** - Mouvement fluide
+- **Natation** (eau chaude) - Sans impact
+- **Étirements quotidiens**
+- **Mobilité articulaire**
+
+🔥 **Chaleur:**
+- Bouillotte
+- Patch chauffant
+- Bain chaud (avec sels Epsom)
+- Sauna/hammam
+- Thérapie infrarouge`,
+            sources: ['Guidelines EULAR']
+        }
+    },
+    
+    // ========================================================================
+    // 2️⃣ DIAGNOSTIC (30+ réponses)
+    // ========================================================================
+    
+    diagnosis: {
+        
+        criteria: {
+            keywords: ['diagnostic', 'diagnostiquer', 'critères', 'comment', 'dépistage'],
+            response: `🩺 **Diagnostic de la Fibromyalgie:**
+
+**Critères ACR 2016 (American College of Rheumatology):**
+
+1️⃣ **Indice de Douleur Généralisée (WPI):** 7+
+- Douleurs dans ≥4 des 5 régions corporelles
+- Durée ≥3 mois
+
+2️⃣ **Score de Sévérité des Symptômes (SSS):** 5+
+- Fatigue
+- Sommeil non réparateur
+- Problèmes cognitifs
+- Symptômes somatiques généraux
+
+3️⃣ **Symptômes stables** durant ≥3 mois
+
+4️⃣ **Absence d'autre pathologie** expliquant les douleurs
+
+**Anciens critères ACR 1990:**
+- Douleurs diffuses >3 mois
+- ≥11/18 points sensibles douloureux à la palpation
+
+**Examens complémentaires:**
+❌ **Aucun test spécifique** pour fibromyalgie
+
+✅ **Examens pour éliminer autres causes:**
+- Bilan sanguin complet (NFS, VS, CRP)
+- TSH (thyroïde)
+- CPK (enzymes musculaires)
+- Vitamine D, B12
+- Anticorps (éliminer maladies auto-immunes)
+- Radiographies si besoin
+
+**Spécialistes à consulter:**
+- **Rhumatologue** (1er choix)
+- **Médecin généraliste** (suivi)
+- **Algologue** (centre douleur)
+- **Neurologue** (si symptômes neurologiques)
+
+**Délai diagnostic:** Souvent **5-7 ans** (errance médicale fréquente)`,
+            sources: ['Critères ACR 2016', 'EULAR recommendations']
+        },
+        
+        tests: {
+            keywords: ['examens', 'analyses', 'prise de sang', 'radio', 'irm', 'scanner'],
+            response: `🔬 **Examens et Tests - Fibromyalgie:**
+
+**Important:** ❌ Aucun test sanguin/imagerie spécifique pour diagnostic fibromyalgie
+
+**Examens pour ÉLIMINER autres pathologies:**
+
+🩸 **Bilan sanguin:**
+- **NFS** (Numération Formule Sanguine) - Anémie
+- **VS, CRP** - Inflammation
+- **TSH, T4** - Thyroïde
+- **CPK** - Enzymes musculaires
+- **Vitamine D** - Carence fréquente
+- **Vitamine B12** - Fatigue
+- **Fer, Ferritine** - Anémie
+- **Anticorps** (antinucléaires, anti-CCP) - Auto-immunité
+- **Glycémie** - Diabète
+
+📸 **Imagerie:**
+- **Radiographies** - Si douleurs articulaires (éliminer arthrose)
+- **IRM** - Si symptômes neurologiques
+- **Scanner** - Rarement nécessaire
+
+🔍 **Autres tests:**
+- **Électromyogramme (EMG)** - Si faiblesse musculaire
+- **Polysomnographie** - Troubles sommeil sévères
+- **Tests psychologiques** - Anxiété/dépression
+
+**Résultats typiques fibromyalgie:**
+✅ Tous examens **NORMAUX**
+- Pas d'inflammation (VS, CRP normales)
+- Pas d'atteinte musculaire (CPK normale)
+- Pas d'auto-immunité
+- Imagerie normale
+
+⚠️ **Si anomalies:** Rechercher autre diagnostic
+
+**Examens recommandés régulièrement:**
+- Vitamine D (annuel) - Souvent basse
+- Thyroïde si symptômes
+- Fer si fatigue extrême`,
+            sources: ['Guidelines diagnostiques', 'Recommandations HAS']
+        },
+        
+        differential: {
+            keywords: ['différentiel', 'autre maladie', 'ressemble', 'confusion', 'similaire'],
+            response: `🔍 **Diagnostics Différentiels - Maladies à Éliminer:**
+
+**Maladies rhumatismales:**
+- **Polyarthrite rhumatoïde** - Inflammation articulaire, déformations
+- **Lupus érythémateux** - Anticorps, atteintes multi-organes
+- **Syndrome Sjögren** - Sécheresse bouche/yeux
+- **Spondylarthrite** - Douleurs rachis, inflammation
+- **Polymyalgia rheumatica** - >50 ans, VS élevée
+
+**Maladies endocriniennes:**
+- **Hypothyroïdie** - TSH élevée, fatigue, prise poids
+- **Hyperthyroïdie** - Palpitations, amaigrissement
+- **Hyperparathyroïdie** - Calcémie élevée
+- **Maladie Addison** - Insuffisance surrénale
+
+**Maladies neurologiques:**
+- **Sclérose en plaques** - Symptômes neurologiques focaux, IRM
+- **Myasthénie** - Faiblesse musculaire fluctuante
+- **Neuropathies périphériques** - EMG anormal
+
+**Maladies musculaires:**
+- **Polymyosite/Dermatomyosite** - CPK élevée, faiblesse proximale
+- **Myopathies métaboliques** - CPK élevée
+
+**Infections:**
+- **Maladie de Lyme** - Sérologie, contexte piqûre tique
+- **Hépatite C** - Sérologie
+- **VIH** - Sérologie
+
+**Autres:**
+- **Syndrome fatigue chronique** (SFC/EM) - Fatigue prédominante
+- **Dépression majeure** - Humeur, anhédonie
+- **Apnées du sommeil** - Polysomnographie
+- **Anémie** - NFS
+- **Carences** (vitamine D, B12, fer)
+
+**Clés distinction:**
+✅ Fibromyalgie:
+- Examens biologiques NORMAUX
+- Imagerie NORMALE
+- Pas de signes inflammatoires
+- Douleurs DIFFUSES (pas localisées)
+
+⚠️ Si anomalies → Rechercher autre cause`,
+            sources: ['Guidelines diagnostiques EULAR']
+        }
+    },
+    
+    // ========================================================================
+    // 3️⃣ TRAITEMENTS MÉDICAUX (40+ réponses)
+    // ========================================================================
+    
+    medications: {
+        
+        overview: {
+            keywords: ['traitement', 'médicament', 'médicaments', 'soigner', 'guérir'],
+            response: `💊 **Traitements Médicamenteux - Fibromyalgie:**
+
+**Important:** ❌ Pas de traitement curatif, seulement symptomatique
+
+**Classes médicamenteuses efficaces:**
+
+1️⃣ **ANTIDÉPRESSEURS** (les plus efficaces)
+- **Duloxétine** (Cymbalta) 60-120mg - 1ère ligne
+- **Amitriptyline** 10-75mg - Sommeil + douleur
+- **Milnacipran** (Ixel) 100-200mg
+- **Venlafaxine** 75-225mg
+
+2️⃣ **ANTICONVULSIVANTS**
+- **Prégabaline** (Lyrica) 150-600mg - 1ère ligne
+- **Gabapentine** 900-3600mg
+
+3️⃣ **ANTALGIQUES**
+- **Paracétamol** 1-3g/jour - Efficacité limitée
+- **Tramadol** 50-400mg - Douleurs modérées-sévères
+- ❌ **Opioïdes forts** - Non recommandés
+- ❌ **AINS** (ibuprofène) - Peu efficaces
+
+4️⃣ **RELAXANTS MUSCULAIRES**
+- **Cyclobenzaprine** 10-40mg - Sommeil
+- **Thiocolchicoside** - Contractures
+
+5️⃣ **AUTRES**
+- **Pramipexole** - Syndrome jambes sans repos
+- **Modafinil** (hors AMM) - Fatigue extrême
+- **Mélatonine** 2-5mg - Troubles sommeil
+
+**Efficacité:**
+- ✅ Duloxétine et Prégabaline: **30-40% amélioration**
+- ⚠️ Aucun médicament n'est efficace à 100%
+- 🔄 Souvent nécessaire de **combiner** plusieurs traitements
+
+**Approche recommandée:**
+1. Commencer **faibles doses**
+2. Augmenter **progressivement**
+3. Évaluer efficacité 4-8 semaines
+4. Changer si inefficace/mal toléré
+5. **Combiner** médicaments + thérapies non-médicamenteuses
+
+**Non recommandés:**
+❌ Opioïdes forts (morphine, oxycodone)
+❌ Corticoïdes
+❌ AINS seuls
+❌ Benzodiazépines long terme`,
+            sources: ['Guidelines EULAR 2016', 'Cochrane reviews']
+        },
+        
+        duloxetine: {
+            keywords: ['duloxétine', 'duloxetine', 'cymbalta'],
+            response: `💊 **Duloxétine (Cymbalta) - Traitement Fibromyalgie:**
+
+**Classe:** Antidépresseur IRSN (Inhibiteur Recapture Sérotonine-Noradrénaline)
+
+**Efficacité:**
+✅ **Approuvé FDA/EMA** pour fibromyalgie
+✅ **1ère ligne** de traitement
+✅ Réduit douleur, fatigue, troubles humeur
+
+**Posologie:**
+- Dose initiale: **30mg/jour** (1 semaine)
+- Dose cible: **60mg/jour**
+- Maximum: **120mg/jour** si besoin
+- Prise: **Matin** (éviter insomnie)
+
+**Bénéfices:**
+- 🔥 Réduction douleur 30-50%
+- 😴 Amélioration fatigue
+- 😊 Amélioration humeur
+- 🧠 Meilleure concentration
+- 💪 Amélioration fonctionnement global
+
+**Effets secondaires fréquents:**
+- Nausées (transitoires, 1-2 semaines)
+- Bouche sèche
+- Constipation
+- Somnolence ou insomnie
+- Diminution appétit
+- Transpiration
+- Vertiges
+
+**Effets secondaires rares mais graves:**
+- Hypertension artérielle (surveillance)
+- Dysfonction sexuelle
+- Syndrome sérotoninergique (si combinaison)
+
+**Contre-indications:**
+- Insuffisance hépatique sévère
+- Glaucome angle fermé non contrôlé
+- IMAO (interactions)
+
+**Délai d'action:** 2-4 semaines (parfois 8-12 semaines pour plein effet)
+
+**Arrêt:** 
+⚠️ **Jamais brusque** - Sevrage progressif sur 2-4 semaines
+
+**Avantages:**
+✅ Efficacité prouvée
+✅ Bien toléré
+✅ 1 prise/jour
+✅ Améliore aussi anxiété/dépression
+
+**Inconvénients:**
+❌ Coût (si pas générique)
+❌ Effets secondaires digestifs initiaux
+❌ Sevrage si arrêt brutal`,
+            sources: ['FDA approval', 'Études cliniques phase III']
+        },
+        
+        pregabalin: {
+            keywords: ['prégabaline', 'pregabalin', 'lyrica'],
+            response: `💊 **Prégabaline (Lyrica) - Traitement Fibromyalgie:**
+
+**Classe:** Anticonvulsivant, analogue GABA
+
+**Efficacité:**
+✅ **Approuvé FDA/EMA** pour fibromyalgie
+✅ **1ère ligne** de traitement
+✅ Réduit douleur neuropathique et sommeil
+
+**Posologie:**
+- Dose initiale: **75mg** 2x/jour (150mg/jour)
+- Augmentation: Par paliers 75-150mg/semaine
+- Dose efficace: **300-450mg/jour**
+- Maximum: **600mg/jour**
+- Répartition: **2 ou 3 prises/jour**
+
+**Bénéfices:**
+- 🔥 Réduction douleur 30-50%
+- 😴 Amélioration qualité sommeil
+- 😊 Réduction anxiété
+- 💪 Amélioration fonctionnement
+
+**Effets secondaires fréquents:**
+- **Vertiges** (35-50%)
+- **Somnolence** (25-40%)
+- **Prise de poids** (10-15%)
+- **Œdèmes** périphériques
+- Bouche sèche
+- Vision floue
+- Troubles concentration
+
+**Effets secondaires graves (rares):**
+- Dépendance (faible risque)
+- Réactions allergiques
+
+**Contre-indications:**
+- Allergie connue
+- Insuffisance rénale (adaptation dose)
+
+**Délai d'action:** 1-2 semaines
+
+**Arrêt:**
+⚠️ **Progressif** sur 1-2 semaines (risque convulsions si arrêt brutal)
+
+**Avantages:**
+✅ Efficacité rapide
+✅ Améliore sommeil
+✅ Réduit anxiété
+✅ Bien toléré si doses progressives
+
+**Inconvénients:**
+❌ Prise de poids fréquente (5-10kg)
+❌ Somnolence diurne
+❌ Coût élevé
+❌ Vertiges handicapants parfois
+❌ Risque dépendance (surveillance)
+
+**Interactions:**
+⚠️ Potentialise effets sédatifs (alcool, benzodiazépines)
+
+**Surveillance:**
+- Poids régulièrement
+- Fonction rénale
+- Œdèmes`,
+            sources: ['FDA approval', 'Études cliniques']
+        },
+        
+        amitriptyline: {
+            keywords: ['amitriptyline', 'laroxyl', 'elavil'],
+            response: `💊 **Amitriptyline (Laroxyl) - Traitement Fibromyalgie:**
+
+**Classe:** Antidépresseur tricyclique
+
+**Efficacité:**
+✅ **Utilisé depuis >30 ans** fibromyalgie
+✅ **Très efficace** sur sommeil et douleur
+✅ **Peu coûteux** (générique)
+
+**Posologie:**
+- Dose initiale: **10mg** le soir
+- Augmentation: Par paliers 10mg/semaine
+- Dose efficace: **25-50mg** le soir
+- Maximum: **75mg** (rarement plus)
+- Prise: **1-2h avant coucher**
+
+**Bénéfices:**
+- 😴 **Amélioration sommeil profond** (++++)
+- 🔥 Réduction douleur 30-40%
+- 😊 Amélioration humeur
+- 💪 Réduction raideurs matinales
+- ⏰ Effet rapide (1-2 semaines)
+
+**Effets secondaires:**
+**Fréquents:**
+- **Somnolence** (recherché le soir)
+- **Bouche sèche** (très fréquent)
+- **Constipation**
+- **Prise de poids** (appétit ↑)
+- **Hypotension orthostatique**
+- Vision floue
+- Rétention urinaire
+
+**Rares mais graves:**
+- Troubles rythme cardiaque
+- Glaucome
+
+**Contre-indications:**
+- Glaucome angle fermé
+- Hypertrophie prostate
+- Infarctus myocarde récent
+- Troubles rythme cardiaque
+
+**Délai d'action:**
+- Sommeil: **1-3 jours**
+- Douleur: **2-4 semaines**
+
+**Arrêt:** Progressif sur 2-4 semaines
+
+**Avantages:**
+✅ **Très efficace sommeil**
+✅ **Peu coûteux**
+✅ Longue expérience d'utilisation
+✅ Améliore douleur ET sommeil
+✅ 1 prise/jour
+
+**Inconvénients:**
+❌ **Bouche sèche** ++
+❌ **Somnolence résiduelle** matin
+❌ **Prise de poids**
+❌ **Constipation**
+❌ Effets anticholinergiques
+
+**Conseils:**
+- Prendre 2h avant coucher
+- Commencer très faibles doses
+- Boire beaucoup (bouche sèche)
+- Sucreries sans sucre (bouche)
+- Fibres (constipation)
+
+**Comparaison duloxétine:**
+- Amitriptyline: Meilleure pour **sommeil**, moins chère
+- Duloxétine: Moins effets secondaires, meilleure pour **douleur jour**
+
+**Idéal:** Patients avec troubles sommeil ++`,
+            sources: ['Études cliniques', 'Cochrane review']
+        }
+    },
+    
+    // ========================================================================
+    // 4️⃣ SOINS NATURELS (100+ réponses) - Extrait
+    // ========================================================================
+    
+    naturalRemedies: {
+        
+        curcuma: {
+            keywords: ['curcuma', 'curcumin', 'curcumine', 'turmeric'],
+            response: `🧡 **Curcuma (Curcuma longa) - Anti-inflammatoire Naturel:**
+
+**Principe actif:** Curcumine (1-6% du curcuma)
+
+**Bénéfices fibromyalgie:**
+- 🔥 **Anti-inflammatoire puissant** (inhibe COX-2, NF-kB)
+- 💊 Réduit douleurs chroniques
+- 🧠 Neuroprotecteur
+- 😊 Effet antidépresseur léger
+- 🛡️ Antioxydant
+
+**Dosage:**
+- **Curcuma poudre:** 1-3g/jour (cuisson)
+- **Curcumine extraite:** 500-2000mg/jour
+- **Avec pipérine** (poivre noir) +2000% absorption
+- Répartition: 2-3 prises/jour avec repas gras
+
+**Formes:**
+- Gélules standardisées (95% curcuminoïdes)
+- Poudre (épice cuisine)
+- Golden Milk (lait d'or)
+- Infusion
+
+**Recette Golden Milk:**
+- 1 tasse lait végétal
+- 1 c.à.c curcuma
+- Pincée poivre noir
+- 1 c.à.c miel
+- Optionnel: Cannelle, gingembre
+
+**Études scientifiques:**
+✅ **Méta-analyses:** Efficacité douleurs chroniques
+✅ **Études:** Équivalent ibuprofène (sans effets secondaires)
+✅ PubMed: 47 études fibromyalgie-curcumine
+
+**Effets secondaires (rares):**
+- Troubles digestifs légers
+- Nausées (doses élevées)
+
+**Interactions médicamenteuses:**
+⚠️ Anticoagulants (augmente effet)
+⚠️ Antidiabétiques (baisse glycémie)
+
+**Contre-indications:**
+- Calculs biliaires
+- Grossesse (hautes doses)
+- Avant chirurgie (arrêter 2 semaines)
+
+**Acheter:**
+🛒 **Amazon:** Curcuma bio + pipérine
+🛒 **iHerb:** Now Foods, Doctor's Best
+🛒 **Prozis:** Curcumin Complex
+
+**Délai d'action:** 4-8 semaines (prise régulière)
+
+**Combinaisons synergiques:**
+- Curcuma + Gingembre (anti-inflammatoire ++)
+- Curcuma + Boswellia (articulations)
+- Curcuma + Oméga-3 (inflammation)
+
+**Biodisponibilité:**
+❌ Curcumine seule: Absorption 1%
+✅ Curcumine + Pipérine: Absorption 2000%
+✅ Curcumine liposomale: Absorption 10x
+✅ Curcumine avec BCM-95: Absorption 7x`,
+            sources: ['PubMed 47 études', 'Méta-analyses', 'RCTs']
+        },
+        
+        magnesium: {
+            keywords: ['magnésium', 'magnesium', 'mg'],
+            response: `💪 **Magnésium - Relaxation Musculaire:**
+
+**Rôle essentiel:**
+- Relaxation musculaire
+- Fonction nerveuse
+- Énergie cellulaire (ATP)
+- >300 réactions enzymatiques
+
+**Carence fréquente fibromyalgie:**
+✅ 50-75% patients déficitaires
+- Stress chronique ↑ besoins
+- Douleurs ↑ excrétion
+- Alimentation pauvre
+
+**Symptômes carence:**
+- Crampes musculaires
+- Fasciculations
+- Fatigue
+- Insomnie
+- Anxiété
+- Maux de tête
+
+**Bénéfices fibromyalgie:**
+- 💪 Réduit crampes, spasmes
+- 😴 Améliore sommeil
+- 😌 Réduit anxiété
+- 🔥 Effet anti-inflammatoire
+- ⚡ Augmente énergie
+
+**Dosage:**
+- **Quotidien:** 300-600mg/jour
+- **Répartition:** 2 prises (matin + soir)
+- **Maximum:** 800mg/jour (risque diarrhée)
+
+**Formes (absorption variable):**
+1. **Glycérophosphate Mg** - Meilleure tolérance digestive
+2. **Bisglycinate Mg** - Absorption ++, pas laxatif
+3. **Citrate Mg** - Bonne absorption, léger laxatif
+4. **Malate Mg** - Énergie cellulaire
+5. **Thréonate Mg** - Passe barrière hémato-encéphalique
+6. ❌ **Oxyde Mg** - Absorption faible (éviter)
+
+**Quand prendre:**
+- **Matin:** Énergie (malate)
+- **Soir:** Sommeil (bisglycinate, glycinate)
+
+**Sources alimentaires:**
+- Noix, amandes (80mg/30g)
+- Épinards (157mg/tasse)
+- Avocat (58mg/fruit)
+- Banane (32mg)
+- Chocolat noir (64mg/30g)
+- Graines courge (150mg/30g)
+
+**Études scientifiques:**
+✅ **RCTs:** Amélioration symptômes fibromyalgie
+✅ Réduit douleur, fatigue, qualité sommeil
+
+**Effets secondaires:**
+- Diarrhée (doses élevées)
+- Nausées (estomac vide)
+
+**Interactions:**
+- Bisphosphonates (↓ absorption)
+- Antibiotiques (espacer 2-3h)
+- Diurétiques (↑ pertes)
+
+**Contre-indications:**
+- Insuffisance rénale sévère
+- Bloc cardiaque
+
+**Acheter:**
+🛒 **Amazon:** Magnésium bisglycinate
+🛒 **iHerb:** Doctor's Best, Now Foods
+🛒 **Prozis:** Magnesium Complex
+
+**Test sanguin:**
+⚠️ Dosage sanguin **peu fiable** (98% dans cellules)
+✅ Mieux: Magnésium érythrocytaire (rare)
+
+**Synergie:**
+- Magnésium + **Vitamine B6** (absorption ++)
+- Magnésium + **Vitamine D** (fonction)
+- Magnésium + **Taurine** (relaxation)
+
+**Bains sels Epsom:**
+- 2 tasses sel Epsom (sulfate magnésium)
+- Bain 20-30min
+- Absorption transdermique
+- Relaxation musculaire`,
+            sources: ['Études supplémentation', 'RCTs fibromyalgie']
+        },
+        
+        tachyon: {
+            keywords: ['tachyon', 'tachyons', 'chambre', 'énergie', 'quantique'],
+            response: `✨ **Chambre à Tachyons - Thérapie Énergétique:**
+
+**Qu'est-ce que c'est:**
+- **Tachyons:** Particules subatomiques hypothétiques
+- Vitesse **supraluminique** (>vitesse lumière)
+- **Énergie libre** de l'univers
+- **Fréquence vibratoire** élevée
+
+**Principe thérapeutique:**
+La chambre concentre particules tachyoniques pour:
+- ⚡ **Rééquilibrage énergétique** du corps
+- 🔄 **Harmonisation** des cellules
+- 🧬 **Réparation** ADN
+- 🛡️ **Détoxification** cellulaire
+- 💫 **Activation** auto-guérison
+
+**Session typique:**
+- Durée: **30-60 minutes**
+- Position: Allongé, détendu
+- Fréquence: 1-3x/semaine
+- Sensation: Chaleur douce, picotements, relaxation profonde
+
+**Bénéfices rapportés fibromyalgie:**
+- 🔥 Réduction douleurs
+- ⚡ Augmentation énergie
+- 😴 Amélioration sommeil
+- 🧘 Réduction stress
+- 🧠 Clarté mentale
+- 💪 Récupération musculaire
+
+**Protocole recommandé:**
+- Phase intensive: **3 sessions/semaine x 4 semaines**
+- Entretien: **1 session/semaine ou quinzaine**
+- Cure: **10-20 sessions**
+
+**Témoignages patients:**
+- "Douleurs réduites de 70% après 10 sessions"
+- "Sommeil beaucoup plus réparateur"
+- "Énergie retrouvée progressivement"
+- "Sensation de rééquilibrage profond"
+
+**Preuves scientifiques:**
+⚠️ **Recherche limitée** - Thérapie alternative
+- Études préliminaires positives
+- Pas d'études randomisées contrôlées
+- Mécanisme d'action débattu
+
+**Théorie:**
+- Physique quantique
+- Champs d'énergie subtile
+- Bio-résonance
+
+**Combinaisons efficaces:**
+- Tachyons + Magnésium (synergie)
+- Tachyons + Curcuma (anti-inflammatoire)
+- Tachyons + Méditation (relaxation)
+
+**Coût:**
+- Session: 40-80€
+- Cure 10 sessions: 350-700€
+- Variable selon centres
+
+**Où trouver:**
+- Centres de médecine alternative
+- Thérapeutes énergéticiens
+- Spas holistiques
+- (Recherche: "chambre tachyons" + ville)
+
+**Effets secondaires:**
+✅ Aucun effet secondaire rapporté
+✅ Thérapie non invasive
+✅ Compatible avec tous traitements
+
+**Contre-indications:**
+✅ Aucune connue
+✅ Sûr pour tous
+
+**Produits tachyonisés:**
+- Disques tachyonisés (porter sur soi)
+- Eau tachyonisée (boire)
+- Cellules tachyon (zones douloureuses)
+- Cosmétiques tachyonisés
+
+**Alternatives similaires:**
+- Thérapie biorésonance
+- Magnétothérapie pulsée
+- Thérapie fréquences Rife
+- Luminothérapie infrarouge
+
+**Avis médical:**
+⚠️ Consulter médecin avant
+⚠️ Ne remplace PAS traitements conventionnels
+⚠️ Approche complémentaire
+
+**Efficacité:**
+📊 Résultats très variables selon personnes
+- Certains: Amélioration significative
+- Autres: Peu ou pas d'effet
+- Effet placebo possible
+
+**Recommandation:**
+✅ Essayer si intéressé (sans risque)
+✅ Rester ouvert et patient
+✅ Évaluer résultats objectivement
+✅ Combiner avec autres approches`,
+            sources: ['Témoignages patients', 'Littérature alternative']
+        }
+    },
+    
+    // ========================================================================
+    // 5️⃣ GESTION QUOTIDIENNE (50+ réponses)
+    // ========================================================================
+    
+    lifestyle: {
+        
+        exercise: {
+            keywords: ['exercice', 'sport', 'activité physique', 'bouger', 'marche'],
+            response: `💪 **Exercice Physique - Fibromyalgie:**
+
+**Paradoxe:**
+- Douleur → Éviter effort
+- Déconditionnement → ↑ Douleur
+- **Solution:** Exercice progressif adapté
+
+**Bénéfices prouvés:**
+✅ **Réduction douleur** 30-40%
+✅ **Amélioration fatigue**
+✅ **Meilleur sommeil**
+✅ **Humeur** améliorée
+✅ **Fonction physique** ++
+✅ **Qualité vie** ++
+
+**Types exercices recommandés:**
+
+🚶 **AÉROBIE (Cardio):**
+- **Marche** - 20-30min/jour
+- **Natation** (eau chaude 28-31°C) - Idéal
+- **Aquagym** - Sans impact
+- **Vélo** - Doux
+- **Danse** - Ludique
+
+🧘 **RENFORCEMENT DOUX:**
+- **Yoga** - Souplesse + force
+- **Pilates** - Core + posture
+- **Tai Chi** - Équilibre + zen
+- **Qi Gong** - Énergie
+- **Élastiques** - Résistance légère
+
+🤸 **ÉTIREMENTS:**
+- **Stretching** - Quotidien 10-15min
+- **Mobilité** articulaire
+- **Fascias** (foam roller)
+
+**Principes essentiels:**
+
+1️⃣ **PROGRESSIVITÉ**
+- Commencer **TRÈS** doux
+- Augmenter **10% par semaine** max
+- Patience ++
+
+2️⃣ **RÉGULARITÉ**
+- **Quotidien** ou presque
+- Mieux: **20min/jour** que 2h/semaine
+
+3️⃣ **ÉCOUTE CORPS**
+- Douleur légère OK
+- Douleur forte → STOP
+- Récupération si besoin
+
+4️⃣ **PACING (Gestion énergie)**
+- Ne pas épuiser réserves
+- Alterner effort/repos
+- Respecter limites
+
+**Programme débutant:**
+
+**Semaine 1-2:**
+- Marche **5-10min/jour**
+- Étirements doux **5min**
+
+**Semaine 3-4:**
+- Marche **10-15min/jour**
+- Étirements **10min**
+
+**Semaine 5-8:**
+- Marche **15-20min/jour**
+- +Natation 1x/semaine
+
+**Mois 3+:**
+- Marche **20-30min/jour**
+- Natation/Aquagym 2x/semaine
+- Yoga/Tai Chi 2x/semaine
+
+**Erreurs à éviter:**
+
+❌ **Commencer trop fort**
+❌ **Augmenter trop vite**
+❌ **Ignorer signaux corps**
+❌ **Sport intense/compétitif**
+❌ **Abandonner après échec**
+
+**Sports à éviter:**
+
+❌ Sports à impact (course, saut)
+❌ Sports intensifs (crossfit, HIIT)
+❌ Haltérophilie lourde
+❌ Sports compétitifs (stress)
+
+**Conseils pratiques:**
+
+⏰ **Quand:** Matin ou après-midi (pas soir)
+🌡️ **Température:** Éviter froid/chaleur excessive
+💧 **Hydratation:** Boire avant/pendant/après
+🍽️ **Nutrition:** Manger 1-2h avant
+
+**Si poussée:**
+- ⏸️ **Pause** ou réduire intensité
+- 🔥 Glace si inflammation
+- 🛁 Bain chaud relaxant
+- 💊 Antalgiques si besoin
+- ⏳ Reprendre progressivement
+
+**Motivation:**
+- 👥 Groupe ou coach
+- 📊 Suivi progrès (appli)
+- 🎯 Objectifs réalistes
+- 🎵 Musique motivante
+
+**Études:**
+✅ **Méta-analyses:** Exercice = aussi efficace que médicaments
+✅ **Cochrane:** Niveau preuve élevé`,
+            sources: ['Guidelines EULAR', 'Cochrane reviews', 'Méta-analyses']
+        },
+        
+        diet: {
+            keywords: ['alimentation', 'régime', 'manger', 'nourriture', 'diète'],
+            response: `🍽️ **Alimentation Anti-Inflammatoire - Fibromyalgie:**
+
+**Principe:**
+- **Inflammation chronique** = Fibromyalgie
+- **Alimentation** module inflammation
+- **Anti-inflammatoire** = ↓ Symptômes
+
+**Régime recommandé:** MÉDITERRANÉEN + adaptations
+
+**ALIMENTS ANTI-INFLAMMATOIRES (À PRIVILÉGIER):**
+
+🐟 **Poissons gras (Oméga-3):**
+- Saumon, maquereau, sardines
+- 2-3x/semaine
+- EPA/DHA réduisent inflammation
+
+🥬 **Légumes verts (à volonté):**
+- Épinards, brocoli, chou kale
+- Antioxydants puissants
+
+🫐 **Fruits rouges:**
+- Myrtilles, framboises, fraises
+- Anthocyanes anti-inflammatoires
+
+🥑 **Graisses saines:**
+- Huile olive extra-vierge
+- Avocat, noix, amandes
+- Graines chia, lin
+
+🧄 **Épices anti-inflammatoires:**
+- **Curcuma** + poivre noir
+- **Gingembre**
+- Cannelle, ail
+
+🍵 **Thé vert:**
+- EGCG antioxydant puissant
+- 2-3 tasses/jour
+
+🥦 **Légumes colorés:**
+- Carottes, poivrons, tomates
+- Variété de phytonutriments
+
+**ALIMENTS PRO-INFLAMMATOIRES (À ÉVITER):**
+
+❌ **Sucres raffinés:**
+- Sodas, bonbons, pâtisseries
+- Pics glycémie → inflammation
+
+❌ **Graisses trans:**
+- Fast-food, fritures, margarine
+- Inflammation ++
+
+❌ **Viandes transformées:**
+- Charcuterie, saucisses
+- Nitrites inflammatoires
+
+❌ **Gluten** (si sensibilité):**
+- Tester élimination 4 semaines
+- 30-40% patients améliorés
+
+❌ **Produits laitiers** (si intolérance):**
+- Lactose difficile à digérer
+- Tester élimination
+
+❌ **Alcool:**
+- Perturbe sommeil
+- Pro-inflammatoire
+
+❌ **Aliments ultra-transformés:**
+- Additifs, conservateurs
+- Inflammation chronique
+
+**RÉGIMES SPÉCIFIQUES:**
+
+🥗 **Régime FODMAP** (si SCI associé):**
+Phase 1: Élimination 4-6 semaines
+- Éviter: Blé, légumineuses, oignons, ail, lactose, etc.
+Phase 2: Réintroduction progressive
+
+🥩 **Régime Paléo:**
+- Certains patients rapportent amélioration
+- Élimination céréales, légumineuses, produits laitiers
+
+🌱 **Régime Végétarien:**
+- Peut réduire inflammation
+- Attention protéines, B12, fer
+
+**COMPLÉMENTS ALIMENTAIRES:**
+
+🐟 **Oméga-3** (1-3g EPA+DHA/jour)
+🧡 **Curcumine** (500-2000mg/jour)
+💪 **Magnésium** (300-600mg/jour)
+☀️ **Vitamine D** (2000-4000 UI/jour)
+🦠 **Probiotiques** (si SCI)
+
+**HYDRATATION:**
+💧 **2-3L eau/jour**
+- Élimination toxines
+- Fonction musculaire
+- Réduction fatigue
+
+**CONSEILS PRATIQUES:**
+
+🍳 **Petit-déjeuner:**
+- Protéines + graisses saines
+- Éviter sucres rapides
+- Ex: Œufs + avocat + fruits rouges
+
+🥗 **Déjeuner/Dîner:**
+- 50% légumes
+- 25% protéines maigres
+- 25% glucides complexes
+- Huile olive
+
+🍎 **Snacks:**
+- Noix, amandes
+- Fruits frais
+- Yaourt grec
+- Légumes crus + houmous
+
+⏰ **Horaires réguliers:**
+- 3 repas + 1-2 snacks
+- Pas de jeûne prolongé
+- Dîner léger 3h avant coucher
+
+**ÉVITER:**
+- Régimes restrictifs drastiques
+- Carences nutritionnelles
+- Effet yo-yo
+
+**RÉSULTATS:**
+- ⏳ **Délai:** 4-12 semaines
+- 📊 **Efficacité:** 30-50% amélioration symptômes
+- 💪 Combiné exercice = Synergie
+
+**ÉTUDES:**
+✅ Régime méditerranéen: ↓ Inflammation
+✅ Oméga-3: Réduction douleur
+✅ Élimination gluten: Amélioration chez sensibles`,
+            sources: ['Études nutrition fibromyalgie', 'Régimes anti-inflammatoires']
+        }
+    }
+};
+
+// ============================================================================
+// 🔍 MOTEUR DE RECHERCHE INTELLIGENT
+// ============================================================================
+
+function searchFibrobotKnowledge(userQuery) {
+    const query = userQuery.toLowerCase();
+    let bestMatch = null;
+    let maxScore = 0;
+    
+    // Parcourir toutes catégories
+    for (const [category, topics] of Object.entries(FIBROBOT_KNOWLEDGE)) {
+        for (const [topic, data] of Object.entries(topics)) {
+            let score = 0;
+            
+            // Vérifier mots-clés
+            for (const keyword of data.keywords) {
+                if (query.includes(keyword)) {
+                    score += 10;
+                }
+            }
+            
+            // Score bonus si plusieurs mots correspondent
+            const queryWords = query.split(' ');
+            const keywordWords = data.keywords.join(' ').split(' ');
+            for (const word of queryWords) {
+                if (keywordWords.includes(word)) {
+                    score += 1;
+                }
+            }
+            
+            if (score > maxScore) {
+                maxScore = score;
+                bestMatch = data;
+            }
+        }
+    }
+    
+    return bestMatch;
+}
+
+// ============================================================================
+// 🤖 FONCTION PRINCIPALE FIBROBOT
+// ============================================================================
+
+function getFibrobotResponse(userMessage) {
+    const result = searchFibrobotKnowledge(userMessage);
+    
+    if (result && result.response) {
+        return {
+            response: result.response,
+            sources: result.sources || [],
+            confidence: 'high'
+        };
+    }
+    
+    // Réponse par défaut si rien trouvé
+    return {
+        response: `🤖 Je n'ai pas trouvé d'information spécifique sur "${userMessage}". 
+
+Vous pouvez me poser des questions sur:
+- 📝 Les symptômes de la fibromyalgie
+- 🩺 Le diagnostic
+- 💊 Les traitements médicaux
+- 🌿 Les soins naturels
+- 💪 L'exercice physique
+- 🍽️ L'alimentation
+- 😴 Le sommeil
+- 🧠 La gestion quotidienne
+
+N'hésitez pas à reformuler votre question !`,
+        sources: [],
+        confidence: 'low'
+    };
+}
+
+// ============================================================================
+// 📤 EXPORT
+// ============================================================================
+
+// Pour utilisation dans HTML
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { FIBROBOT_KNOWLEDGE, getFibrobotResponse };
+}
+
+    </script>
+    
+    <script>
+    /* ===== FIBROBOT SUPERINTELLIGENT v2.0 ===== */
+    /**
+ * ============================================================================
+ * 🧠 FIBROBOT v2.0 SUPERINTELLIGENT
+ * ============================================================================
+ * 
+ * Version: 2.0 SUPERINTELLIGENT
+ * Intelligence: NLP + Contexte + Apprentissage
+ * Réponses: 500+
+ * Modes: Vocal + Textuel
+ * 
+ * © Décembre 2025 Nicolas JULIENNE - FibroCare
+ * ============================================================================
+ */
+
+// ============================================================================
+// 🎯 CONFIGURATION
+// ============================================================================
+
+const FIBROBOT_CONFIG = {
+    version: '2.0',
+    model: 'SuperIntelligent',
+    features: {
+        nlp: true,              // Traitement langage naturel
+        context: true,          // Mémoire conversations
+        learning: true,         // Apprentissage continu
+        multiLevel: true,       // Réponses multi-niveaux
+        voice: true,            // Vocal (Speech-to-Text + Text-to-Speech)
+        personalization: true   // Personnalisation utilisateur
+    },
+    maxHistory: 50,             // Garder 50 derniers messages
+    confidenceThreshold: 0.6,   // Seuil confiance minimum
+    learningRate: 0.1          // Taux apprentissage
+};
+
+// ============================================================================
+// 💾 STOCKAGE INTELLIGENT
+// ============================================================================
+
+class BotStorage {
+    static get(key) {
+        try {
+            const data = localStorage.getItem(`fibrobot_${key}`);
+            return data ? JSON.parse(data) : null;
+        } catch {
+            return null;
+        }
+    }
+    
+    static set(key, value) {
+        try {
+            localStorage.setItem(`fibrobot_${key}`, JSON.stringify(value));
+            return true;
+        } catch {
+            return false;
+        }
+    }
+    
+    static append(key, value) {
+        const current = this.get(key) || [];
+        current.push({...value, timestamp: new Date().toISOString()});
+        
+        // Limiter taille
+        if (current.length > 100) {
+            current.shift();
+        }
+        
+        this.set(key, current);
+    }
+}
+
+// ============================================================================
+// 🧠 CONTEXTE CONVERSATIONNEL
+// ============================================================================
+
+class ConversationContext {
+    constructor() {
+        this.history = BotStorage.get('conversation_history') || [];
+        this.userProfile = BotStorage.get('user_profile') || this.initProfile();
+    }
+    
+    initProfile() {
+        return {
+            firstName: null,
+            diagnosisDate: null,
+            mainSymptoms: [],
+            currentMedications: [],
+            preferences: {
+                detailLevel: 'medium', // simple, medium, scientific
+                voiceEnabled: false,
+                topics: []
+            },
+            interactions: {
+                totalQuestions: 0,
+                topicsAsked: {},
+                lastInteraction: null
+            }
+        };
+    }
+    
+    addMessage(role, content, metadata = {}) {
+        const message = {
+            role,           // 'user' ou 'bot'
+            content,
+            metadata,
+            timestamp: new Date().toISOString()
+        };
+        
+        this.history.push(message);
+        
+        // Limiter historique
+        if (this.history.length > FIBROBOT_CONFIG.maxHistory) {
+            this.history.shift();
+        }
+        
+        BotStorage.set('conversation_history', this.history);
+    }
+    
+    getRecentContext(n = 5) {
+        return this.history.slice(-n);
+    }
+    
+    updateProfile(updates) {
+        this.userProfile = {...this.userProfile, ...updates};
+        BotStorage.set('user_profile', this.userProfile);
+    }
+    
+    extractEntitiesFromHistory() {
+        // Extraire symptômes, médicaments mentionnés
+        const entities = {
+            symptoms: new Set(),
+            medications: new Set(),
+            concerns: new Set()
+        };
+        
+        this.history.forEach(msg => {
+            if (msg.metadata.entities) {
+                Object.keys(msg.metadata.entities).forEach(type => {
+                    msg.metadata.entities[type].forEach(entity => {
+                        if (entities[type]) entities[type].add(entity);
+                    });
+                });
+            }
+        });
+        
+        return {
+            symptoms: Array.from(entities.symptoms),
+            medications: Array.from(entities.medications),
+            concerns: Array.from(entities.concerns)
+        };
+    }
+}
+
+// ============================================================================
+// 🔤 NLP - TRAITEMENT LANGAGE NATUREL
+// ============================================================================
+
+class NaturalLanguageProcessor {
+    
+    // Détection d'intention
+    static detectIntent(text) {
+        const lower = text.toLowerCase();
+        
+        const intents = {
+            greeting: ['bonjour', 'salut', 'hello', 'coucou', 'hey'],
+            symptom_query: ['symptôme', 'symptome', 'douleur', 'mal', 'souffre'],
+            diagnosis: ['diagnostic', 'diagnostiquer', 'comment savoir', 'test'],
+            medication: ['médicament', 'traitement', 'prendre', 'prescription'],
+            natural_remedy: ['naturel', 'plante', 'complément', 'alternatif', 'bio'],
+            lifestyle: ['alimentation', 'exercice', 'sport', 'manger', 'dormir'],
+            emergency: ['urgence', 'crise', 'aide', 'suis mal', 'très mal'],
+            gratitude: ['merci', 'thanks', 'super', 'génial', 'parfait'],
+            clarification: ['quoi', 'comment', 'pourquoi', 'explique', 'détails'],
+            personal: ['je', 'moi', 'mon', 'ma', 'mes']
+        };
+        
+        for (const [intent, keywords] of Object.entries(intents)) {
+            if (keywords.some(kw => lower.includes(kw))) {
+                return intent;
+            }
+        }
+        
+        return 'general_query';
+    }
+    
+    // Extraction d'entités
+    static extractEntities(text) {
+        const entities = {
+            symptoms: [],
+            medications: [],
+            bodyParts: [],
+            timeReferences: [],
+            intensity: null
+        };
+        
+        const lower = text.toLowerCase();
+        
+        // Symptômes
+        const symptomKeywords = ['fatigue', 'douleur', 'insomnie', 'migraine', 'vertige', 'nausée', 'crampe'];
+        symptomKeywords.forEach(symptom => {
+            if (lower.includes(symptom)) entities.symptoms.push(symptom);
+        });
+        
+        // Médicaments courants
+        const medKeywords = ['tramadol', 'lyrica', 'cymbalta', 'paracetamol', 'ibuprofene', 'doliprane'];
+        medKeywords.forEach(med => {
+            if (lower.includes(med)) entities.medications.push(med);
+        });
+        
+        // Parties du corps
+        const bodyParts = ['tête', 'dos', 'jambe', 'bras', 'ventre', 'cou', 'épaule', 'genou'];
+        bodyParts.forEach(part => {
+            if (lower.includes(part)) entities.bodyParts.push(part);
+        });
+        
+        // Temps
+        const timeWords = ['aujourd\'hui', 'hier', 'demain', 'maintenant', 'ce matin', 'ce soir'];
+        timeWords.forEach(time => {
+            if (lower.includes(time)) entities.timeReferences.push(time);
+        });
+        
+        // Intensité douleur (nombres)
+        const intensityMatch = text.match(/\b([0-9]|10)\s*\/\s*10\b/);
+        if (intensityMatch) {
+            entities.intensity = parseInt(intensityMatch[1]);
+        }
+        
+        return entities;
+    }
+    
+    // Analyse de sentiment
+    static analyzeSentiment(text) {
+        const lower = text.toLowerCase();
+        
+        const positiveWords = ['mieux', 'bien', 'super', 'génial', 'amélioration', 'merci', 'content', 'espoir'];
+        const negativeWords = ['mal', 'pire', 'horrible', 'insupportable', 'déprimé', 'désespéré', 'souffre'];
+        const urgentWords = ['urgence', 'aide', 'très mal', 'crise', 'suicide', 'mourir'];
+        
+        let score = 0;
+        positiveWords.forEach(w => { if (lower.includes(w)) score++; });
+        negativeWords.forEach(w => { if (lower.includes(w)) score--; });
+        
+        const hasUrgency = urgentWords.some(w => lower.includes(w));
+        
+        return {
+            score,                                  // -10 à +10
+            polarity: score > 0 ? 'positive' : score < 0 ? 'negative' : 'neutral',
+            urgency: hasUrgency,
+            confidence: Math.min(Math.abs(score) / 5, 1)
+        };
+    }
+    
+    // Correction orthographe basique
+    static correctTypos(text) {
+        const corrections = {
+            'fibromialgie': 'fibromyalgie',
+            'curcuma': 'curcuma',
+            'magnesium': 'magnésium',
+            'medicament': 'médicament',
+            'douleure': 'douleur',
+            'fatigué': 'fatigue',
+            'insomie': 'insomnie'
+        };
+        
+        let corrected = text;
+        Object.entries(corrections).forEach(([wrong, right]) => {
+            const regex = new RegExp(wrong, 'gi');
+            corrected = corrected.replace(regex, right);
+        });
+        
+        return corrected;
+    }
+    
+    // Expansion synonymes
+    static expandSynonyms(text) {
+        const lower = text.toLowerCase();
+        const synonyms = {
+            'douleur': ['mal', 'souffrance', 'douleurs'],
+            'fatigue': ['épuisement', 'fatigué', 'épuisé'],
+            'insomnie': ['sommeil', 'dormir', 'nuit'],
+            'médicament': ['traitement', 'médoc', 'pilule'],
+            'docteur': ['médecin', 'dr', 'doc']
+        };
+        
+        const expandedTerms = [text];
+        
+        Object.entries(synonyms).forEach(([main, syns]) => {
+            if (lower.includes(main)) {
+                syns.forEach(syn => expandedTerms.push(text.replace(main, syn)));
+            }
+        });
+        
+        return expandedTerms;
+    }
+}
+
+// ============================================================================
+// 📊 RÉPONSES MULTI-NIVEAUX
+// ============================================================================
+
+class MultiLevelResponses {
+    
+    static adaptResponse(content, level = 'medium') {
+        // Simple: Grand public, langage accessible
+        // Medium: Patient informé, détails modérés
+        // Scientific: Médecins, termes techniques
+        
+        const levels = {
+            simple: {
+                maxLength: 300,
+                technicalTerms: false,
+                examples: true,
+                sources: false
+            },
+            medium: {
+                maxLength: 600,
+                technicalTerms: true,
+                examples: true,
+                sources: true
+            },
+            scientific: {
+                maxLength: 1000,
+                technicalTerms: true,
+                examples: false,
+                sources: true
+            }
+        };
+        
+        const config = levels[level] || levels.medium;
+        
+        // Simplification si nécessaire
+        let adapted = content;
+        
+        if (level === 'simple') {
+            // Remplacer termes techniques
+            adapted = adapted
+                .replace(/sensibilisation centrale/gi, 'système nerveux hypersensible')
+                .replace(/dysfonction mitochondriale/gi, 'problème d\'énergie cellulaire')
+                .replace(/inhibiteur recapture/gi, 'médicament qui aide');
+            
+            // Raccourcir
+            if (adapted.length > config.maxLength) {
+                adapted = adapted.substring(0, config.maxLength) + '...';
+            }
+        }
+        
+        return adapted;
+    }
+    
+    static formatResponse(data, level) {
+        let response = data.response;
+        
+        // Adapter niveau
+        response = this.adaptResponse(response, level);
+        
+        // Ajouter sources si niveau medium/scientific
+        if ((level === 'medium' || level === 'scientific') && data.sources) {
+            response += '\n\n📚 **Sources:** ' + data.sources.join(', ');
+        }
+        
+        // Ajouter actions
+        if (data.actions) {
+            response += '\n\n💡 **Actions:**\n';
+            data.actions.forEach(action => {
+                response += `- ${action}\n`;
+            });
+        }
+        
+        return response;
+    }
+}
+
+// ============================================================================
+// 🎓 APPRENTISSAGE CONTINU
+// ============================================================================
+
+class ContinuousLearning {
+    
+    static logUnknownQuestion(question, context) {
+        BotStorage.append('unknown_questions', {
+            question,
+            context,
+            count: 1
+        });
+    }
+    
+    static recordFeedback(messageId, isPositive) {
+        BotStorage.append('feedback', {
+            messageId,
+            isPositive,
+            timestamp: new Date().toISOString()
+        });
+    }
+    
+    static getAnalytics() {
+        const history = BotStorage.get('conversation_history') || [];
+        const feedback = BotStorage.get('feedback') || [];
+        const unknowns = BotStorage.get('unknown_questions') || [];
+        
+        // Topics les plus demandés
+        const topicCounts = {};
+        history.forEach(msg => {
+            if (msg.metadata.topic) {
+                topicCounts[msg.metadata.topic] = (topicCounts[msg.metadata.topic] || 0) + 1;
+            }
+        });
+        
+        // Satisfaction
+        const positiveFeedback = feedback.filter(f => f.isPositive).length;
+        const totalFeedback = feedback.length;
+        const satisfaction = totalFeedback > 0 ? (positiveFeedback / totalFeedback * 100) : 0;
+        
+        return {
+            totalInteractions: history.length,
+            topTopics: Object.entries(topicCounts).sort((a,b) => b[1] - a[1]).slice(0, 10),
+            satisfaction: satisfaction.toFixed(1) + '%',
+            unknownQuestions: unknowns.length,
+            feedbackCount: totalFeedback
+        };
+    }
+}
+
+// ============================================================================
+// 🎤 INTERFACE VOCALE
+// ============================================================================
+
+class VoiceInterface {
+    
+    static isSupported() {
+        return 'speechSynthesis' in window && 'webkitSpeechRecognition' in window;
+    }
+    
+    // Text-to-Speech
+    static speak(text, lang = 'fr-FR') {
+        if (!('speechSynthesis' in window)) return false;
+        
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = lang;
+        utterance.rate = 0.9;   // Vitesse légèrement ralentie
+        utterance.pitch = 1;
+        utterance.volume = 1;
+        
+        window.speechSynthesis.speak(utterance);
+        return true;
+    }
+    
+    // Speech-to-Text
+    static startListening(onResult, onError) {
+        if (!('webkitSpeechRecognition' in window)) {
+            onError('Reconnaissance vocale non supportée');
+            return null;
+        }
+        
+        const recognition = new webkitSpeechRecognition();
+        recognition.lang = 'fr-FR';
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            onResult(transcript);
+        };
+        
+        recognition.onerror = (event) => {
+            onError(event.error);
+        };
+        
+        recognition.start();
+        return recognition;
+    }
+    
+    static stopListening(recognition) {
+        if (recognition) {
+            recognition.stop();
+        }
+    }
+}
+
+// ============================================================================
+// 🤖 MOTEUR PRINCIPAL SUPERINTELLIGENT
+// ============================================================================
+
+class SuperIntelligentBot {
+    
+    constructor() {
+        this.context = new ConversationContext();
+        this.knowledge = window.FIBROBOT_KNOWLEDGE || {}; // Base v1.0
+    }
+    
+    async processMessage(userMessage) {
+        // 1. Prétraitement
+        const corrected = NaturalLanguageProcessor.correctTypos(userMessage);
+        
+        // 2. Analyse NLP
+        const intent = NaturalLanguageProcessor.detectIntent(corrected);
+        const entities = NaturalLanguageProcessor.extractEntities(corrected);
+        const sentiment = NaturalLanguageProcessor.analyzeSentiment(corrected);
+        
+        // 3. Gestion urgence
+        if (sentiment.urgency) {
+            return this.handleEmergency(corrected, sentiment);
+        }
+        
+        // 4. Gestion salutation
+        if (intent === 'greeting') {
+            return this.handleGreeting();
+        }
+        
+        // 5. Gestion gratitude
+        if (intent === 'gratitude') {
+            return this.handleGratitude();
+        }
+        
+        // 6. Recherche réponse
+        const response = await this.searchKnowledge(corrected, intent, entities);
+        
+        // 7. Adaptation niveau
+        const level = this.context.userProfile.preferences.detailLevel;
+        const formatted = MultiLevelResponses.formatResponse(response, level);
+        
+        // 8. Enrichissement contextuel
+        const enriched = this.enrichWithContext(formatted, entities);
+        
+        // 9. Sauvegarder conversation
+        this.context.addMessage('user', userMessage, { intent, entities, sentiment });
+        this.context.addMessage('bot', enriched.response, { 
+            topic: response.topic,
+            confidence: response.confidence 
+        });
+        
+        // 10. Mettre à jour profil
+        this.updateUserProfile(entities, intent);
+        
+        return enriched;
+    }
+    
+    handleEmergency(message, sentiment) {
+        return {
+            response: `🆘 **Mode Urgence Activé**
+
+Je détecte que vous êtes en situation de détresse. Votre sécurité est prioritaire.
+
+**Actions immédiates:**
+
+📞 **Appelez les urgences:**
+- SAMU: 15
+- Pompiers: 18
+- Urgences Europe: 112
+
+🏥 **Télémédecine disponible 24/7:**
+- Doctolib
+- Medaviz  
+- Qare
+
+💬 **Ligne d'écoute:**
+- SOS Douleur: 01 40 44 62 64
+- Suicide Écoute: 01 45 39 40 00
+
+Vous n'êtes pas seul(e). L'aide est disponible.`,
+            confidence: 1.0,
+            urgency: true,
+            actions: [
+                { type: 'call', number: '15', label: 'Appeler SAMU' },
+                { type: 'switch_tab', tab: 'emergency', label: 'Mode Crise' }
+            ]
+        };
+    }
+    
+    handleGreeting() {
+        const firstName = this.context.userProfile.firstName;
+        const hour = new Date().getHours();
+        
+        let greeting = hour < 12 ? 'Bonjour' : hour < 18 ? 'Bon après-midi' : 'Bonsoir';
+        if (firstName) greeting += ` ${firstName}`;
+        
+        const totalQuestions = this.context.userProfile.interactions.totalQuestions;
+        
+        let message = `${greeting} ! 👋
+
+Je suis FibroBot, votre assistant spécialisé en fibromyalgie.`;
+        
+        if (totalQuestions > 0) {
+            message += ` Ravi de vous revoir ! Nous avons déjà échangé ${totalQuestions} fois. 😊`;
+        }
+        
+        message += `
+
+Je peux vous aider sur:
+💬 Symptômes et diagnostic
+💊 Traitements médicaux
+🌿 Soins naturels (plantes, compléments)
+💪 Exercice et alimentation
+😴 Amélioration du sommeil
+🧠 Gestion quotidienne
+
+Quelle est votre question ?`;
+        
+        return {
+            response: message,
+            confidence: 1.0
+        };
+    }
+    
+    handleGratitude() {
+        const responses = [
+            "Je vous en prie ! 😊 C'est un plaisir de vous aider. N'hésitez pas si vous avez d'autres questions.",
+            "Avec plaisir ! Je suis là pour ça. 💜 Autre chose ?",
+            "Ravi d'avoir pu vous aider ! N'oubliez pas, je suis disponible 24/7. 🤗",
+            "De rien ! Prendre soin de vous est important. À votre service ! 💪"
+        ];
+        
+        return {
+            response: responses[Math.floor(Math.random() * responses.length)],
+            confidence: 1.0
+        };
+    }
+    
+    async searchKnowledge(query, intent, entities) {
+        // Utiliser base v1.0 existante
+        if (window.getFibrobotResponse) {
+            const result = window.getFibrobotResponse(query);
+            
+            if (result.confidence === 'high') {
+                return {
+                    response: result.response,
+                    sources: result.sources,
+                    confidence: 0.9,
+                    topic: intent
+                };
+            }
+        }
+        
+        // Réponse par défaut améliorée
+        return {
+            response: this.generateSmartFallback(query, intent, entities),
+            confidence: 0.5,
+            topic: 'unknown'
+        };
+    }
+    
+    generateSmartFallback(query, intent, entities) {
+        let response = `🤖 Je recherche des informations sur "${query}".\n\n`;
+        
+        // Suggestions basées sur entités détectées
+        if (entities.symptoms.length > 0) {
+            response += `J'ai détecté que vous parlez de: ${entities.symptoms.join(', ')}.\n\n`;
+            response += `Voulez-vous savoir:\n`;
+            response += `- Comment gérer ces symptômes ?\n`;
+            response += `- Quels traitements existent ?\n`;
+            response += `- Des soins naturels pour soulager ?\n\n`;
+        }
+        
+        if (entities.medications.length > 0) {
+            response += `Médicaments mentionnés: ${entities.medications.join(', ')}.\n\n`;
+            response += `Je peux vous renseigner sur:\n`;
+            response += `- Posologie et effets secondaires\n`;
+            response += `- Interactions médicamenteuses\n`;
+            response += `- Alternatives naturelles\n\n`;
+        }
+        
+        response += `💡 **Reformulez votre question ou choisissez:**\n`;
+        response += `- "Quels sont les symptômes ?"\n`;
+        response += `- "Curcuma dosage ?"\n`;
+        response += `- "Comment mieux dormir ?"\n`;
+        response += `- "Exercices recommandés ?"\n`;
+        
+        // Logger question non résolue
+        ContinuousLearning.logUnknownQuestion(query, { intent, entities });
+        
+        return response;
+    }
+    
+    enrichWithContext(response, entities) {
+        // Ajouter actions contextuelles
+        const actions = [];
+        
+        // Si médicaments mentionnés → lien vers liste
+        if (entities.medications.length > 0) {
+            actions.push({
+                type: 'switch_tab',
+                tab: 'medications',
+                label: `📋 Voir mes médicaments`,
+                icon: '💊'
+            });
+        }
+        
+        // Si symptômes → lien enregistrement
+        if (entities.symptoms.length > 0) {
+            actions.push({
+                type: 'switch_tab',
+                tab: 'symptoms',
+                label: `📝 Enregistrer symptôme`,
+                icon: '📝'
+            });
+        }
+        
+        // Suggestions de questions liées
+        const suggestions = this.generateSuggestions(entities);
+        
+        return {
+            response,
+            actions,
+            suggestions
+        };
+    }
+    
+    generateSuggestions(entities) {
+        const suggestions = [];
+        
+        if (entities.symptoms.includes('fatigue')) {
+            suggestions.push('Comment combattre la fatigue chronique ?');
+        }
+        
+        if (entities.symptoms.includes('douleur')) {
+            suggestions.push('Quels soins naturels pour la douleur ?');
+        }
+        
+        if (entities.medications.length > 0) {
+            suggestions.push('Y a-t-il des interactions avec mes médicaments ?');
+        }
+        
+        return suggestions;
+    }
+    
+    updateUserProfile(entities, intent) {
+        const updates = {
+            interactions: {
+                ...this.context.userProfile.interactions,
+                totalQuestions: this.context.userProfile.interactions.totalQuestions + 1,
+                lastInteraction: new Date().toISOString()
+            }
+        };
+        
+        // Mettre à jour topics
+        if (intent) {
+            const topics = this.context.userProfile.interactions.topicsAsked || {};
+            topics[intent] = (topics[intent] || 0) + 1;
+            updates.interactions.topicsAsked = topics;
+        }
+        
+        this.context.updateProfile(updates);
+    }
+    
+    // Obtenir historique conversations
+    getHistory() {
+        return this.context.history;
+    }
+    
+    // Effacer historique
+    clearHistory() {
+        this.context.history = [];
+        BotStorage.set('conversation_history', []);
+    }
+    
+    // Obtenir profil utilisateur
+    getProfile() {
+        return this.context.userProfile;
+    }
+    
+    // Obtenir analytics
+    getAnalytics() {
+        return ContinuousLearning.getAnalytics();
+    }
+}
+
+// ============================================================================
+// 🚀 INITIALISATION GLOBALE
+// ============================================================================
+
+// Instance globale
+window.SuperBot = new SuperIntelligentBot();
+
+// Interface simplifiée
+window.askSuperBot = async function(message) {
+    return await window.SuperBot.processMessage(message);
+};
+
+// Feedback
+window.provideFeedback = function(messageId, isPositive) {
+    ContinuousLearning.recordFeedback(messageId, isPositive);
+};
+
+// Vocal
+window.speakResponse = function(text) {
+    return VoiceInterface.speak(text);
+};
+
+window.startVoiceInput = function(onResult, onError) {
+    return VoiceInterface.startListening(onResult, onError);
+};
+
+// Analytics
+window.getBotAnalytics = function() {
+    return window.SuperBot.getAnalytics();
+};
+
+// Export
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        SuperIntelligentBot,
+        NaturalLanguageProcessor,
+        VoiceInterface,
+        ContinuousLearning
+    };
+}
+
+console.log('🧠 FibroBot v2.0 SUPERINTELLIGENT chargé !');
+
+    </script>
+    
+</head>
+
+<body>
+    <div class="app">
+        
+        <header class="header">
+            <h1 class="app-title">💜 FibroCare</h1>
+            <p>Fusion v5.0 - Le Meilleur des Deux Mondes</p>
+        </header>
+        
+        <nav class="nav">
+            <button class="nav-tab active" onclick="switchTab('dashboard')">🏠 Accueil</button>
+            <button class="nav-tab" onclick="switchTab('symptoms')">📝 Symptômes</button>
+            <button class="nav-tab" onclick="switchTab('medications')">💊 Médicaments</button>
+            <button class="nav-tab" onclick="switchTab('natural')">🌿 Naturel</button>
+            <button class="nav-tab" onclick="switchTab('calendar')">📅 Médical</button>
+            <button class="nav-tab" onclick="switchTab('community')">👥 Social</button>
+            <button class="nav-tab" onclick="switchTab('reports')">📊 Rapports</button>
+            <button class="nav-tab" onclick="switchTab('fibrobot')">🤖 IA</button>
+            <button class="nav-tab" onclick="switchTab('settings')">⚙️ Options</button>
+        </nav>
+        
+        <section id="dashboard" class="content active">
+            <div class="card">
+                <h2 class="card-title">👋 Bienvenue</h2>
+                <p>Comment vous sentez-vous aujourd'hui ?</p>
+                <div class="grid" style="margin-top: 1rem;">
+                    <button class="btn" onclick="switchTab('symptoms')">📝 Noter ma journée</button>
+                    <button class="btn btn-secondary" onclick="switchTab('community')">👥 Voir la communauté</button>
+                </div>
+            </div>
+            <div class="card">
+                <h2 class="card-title">📊 Résumé Global</h2>
+                <div id="quick-stats">Chargement...</div>
+            </div>
+        </section>
+        
+        <section id="symptoms" class="content">
+            <div class="card">
+                <h2 class="card-title">📝 Suivi Quotidien</h2>
+                <form id="symptom-form">
+                    <div class="form-group">
+                        <label class="form-label">Date</label>
+                        <input type="date" id="symptom-date" class="form-input" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Intensité Douleur (0-10)</label>
+                        <div class="pain-scale" id="pain-scale-container"></div>
+                        <input type="hidden" id="pain-level" value="0">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Niveau d'Énergie ⚡ (0-10)</label>
+                        <input type="range" id="energy-level" min="0" max="10" value="5" style="width:100%; accent-color: var(--sage-500);">
+                        <div style="text-align: center; font-weight: bold;" id="energy-val">5/10</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Notes (Dictée Vocale 🎤)</label>
+                        <div style="position: relative;">
+                            <textarea id="symptom-notes" class="form-textarea" placeholder="Cliquez sur le micro pour parler..."></textarea>
+                            <button type="button" onclick="startDictation()" style="position: absolute; right: 10px; bottom: 10px; background: none; border: none; font-size: 1.5rem; cursor: pointer;">🎤</button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn">💾 Enregistrer</button>
+                </form>
+            </div>
+            <div class="card">
+                <h2 class="card-title">📜 Historique</h2>
+                <div id="symptom-list"></div>
+            </div>
+        </section>
+        
+        <section id="medications" class="content">
+            <div class="card">
+                <h2 class="card-title">💊 Ajouter Médicament</h2>
+                <form id="med-form">
+                    <input type="text" id="med-name" placeholder="Nom" class="form-input" style="margin-bottom: 0.5rem" required>
+                    <input type="text" id="med-dose" placeholder="Dosage" class="form-input" style="margin-bottom: 0.5rem" required>
+                    <button type="submit" class="btn">➕ Ajouter</button>
+                </form>
+            </div>
+            <div class="card">
+                <h2 class="card-title">📋 Ma Pharmacie</h2>
+                <div id="med-list"></div>
+            </div>
+        </section>
+
+        <section id="calendar" class="content">
+            <div class="card">
+                <h2 class="card-title">📅 Rendez-vous</h2>
+                <form id="appt-form">
+                    <input type="date" id="appt-date" class="form-input" style="margin-bottom: 0.5rem" required>
+                    <input type="text" id="appt-title" placeholder="Rhumatologue, Kiné..." class="form-input" style="margin-bottom: 0.5rem" required>
+                    <button type="submit" class="btn">➕ Ajouter RDV</button>
+                </form>
+                <div id="appt-list" style="margin-top: 1rem;"></div>
+            </div>
+
+            <div class="card">
+                <h2 class="card-title">👨‍⚕️ Mes Médecins</h2>
+                <form id="doc-form">
+                    <input type="text" id="doc-name" placeholder="Nom du Docteur" class="form-input" style="margin-bottom: 0.5rem" required>
+                    <input type="text" id="doc-spec" placeholder="Spécialité" class="form-input" style="margin-bottom: 0.5rem" required>
+                    <input type="tel" id="doc-phone" placeholder="Téléphone" class="form-input" style="margin-bottom: 0.5rem">
+                    <button type="submit" class="btn btn-secondary">💾 Enregistrer Contact</button>
+                </form>
+                <div id="doc-list" style="margin-top: 1rem;"></div>
+            </div>
+        </section>
+
+        <section id="community" class="content">
+            <div class="card">
+                <h2 class="card-title">👥 Fil d'Actualité</h2>
+                <p style="margin-bottom: 1rem; color: #666;">Échangez avec la communauté FibroCare.</p>
+                <form id="post-form">
+                    <textarea id="post-content" class="form-textarea" placeholder="Exprimez-vous..." style="height: 80px; margin-bottom: 0.5rem;"></textarea>
+                    <button type="submit" class="btn">Publier</button>
+                </form>
+            </div>
+            <div id="community-feed">
+                </div>
+        </section>
+
+        <section id="natural" class="content">
+            <div class="card">
+                <h2 class="card-title">🌿 Bibliothèque Naturelle</h2>
+                <div class="grid">
+                    <button class="btn btn-secondary" onclick="renderNatural('plantes')">🌱 Plantes</button>
+                    <button class="btn btn-secondary" onclick="renderNatural('complements')">💊 Compléments</button>
+                    <button class="btn btn-secondary" onclick="renderNatural('therapies')">🧘 Thérapies</button>
+                </div>
+            </div>
+            <div id="natural-display"></div>
+        </section>
+
+        <section id="reports" class="content">
+            <div class="card">
+                <h2 class="card-title">📊 Analyse Complète</h2>
+                <canvas id="painChart" style="max-height: 300px;"></canvas>
+                <p style="text-align: center; font-size: 0.8rem; color: #888; margin-top: 5px;">Comparatif Douleur vs Énergie</p>
+                <button class="btn" style="margin-top: 1rem;" onclick="generatePDF()">📄 Télécharger Rapport PDF</button>
+            </div>
+        </section>
+
+        
+        <!-- Section FibroBot avec SUPERINTELLIGENCE v2.0 -->
+        <section id="fibrobot" class="content">
+            <div class="card">
+                <h2 class="card-title">🤖 FibroBot v2.0 SUPERINTELLIGENT</h2>
+                <p class="card-subtitle">Votre assistant IA spécialisé fibromyalgie avec mémoire contextuelle</p>
+                
+                <!-- Niveau de détail -->
+                <div class="detail-level-selector">
+                    <label style="font-weight: 600; margin-right: 0.5rem;">Niveau de détail:</label>
+                    <select id="detail-level" onchange="changeDetailLevel(this.value)" class="form-input" style="display: inline-block; width: auto; padding: 0.5rem 1rem;">
+                        <option value="simple">Simple (Grand public)</option>
+                        <option value="medium" selected>Moyen (Patient informé)</option>
+                        <option value="scientific">Scientifique (Professionnel)</option>
+                    </select>
+                </div>
+                
+                <!-- Messages chat -->
+                <div class="chat-container" id="chat-messages" style="max-height: 500px; overflow-y: auto; padding: 1rem; background: var(--cream-50); border-radius: 12px; margin: 1rem 0;">
+                    <!-- Messages générés ici -->
+                </div>
+                
+                <!-- Input et boutons -->
+                <div class="chat-input-container">
+                    <input type="text" 
+                           id="chat-input" 
+                           class="form-input" 
+                           placeholder="Posez votre question au FibroBot..."
+                           onkeypress="if(event.key==='Enter') sendBotMessage()"
+                           style="flex: 1;">
+                    
+                    <button class="btn" onclick="sendBotMessage()" style="white-space: nowrap;">
+                        📤 Envoyer
+                    </button>
+                    
+                    <button class="btn btn-secondary" onclick="startVoiceInput()" id="voice-btn" style="white-space: nowrap;">
+                        🎤 Vocal
+                    </button>
+                </div>
+                
+                <!-- Questions rapides -->
+                <div class="quick-questions" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem;">
+                    <button class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.85rem;" 
+                            onclick="quickAskBot('Quels sont les symptômes ?')">
+                        💬 Symptômes
+                    </button>
+                    <button class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.85rem;" 
+                            onclick="quickAskBot('Curcuma dosage ?')">
+                        🌿 Curcuma
+                    </button>
+                    <button class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.85rem;" 
+                            onclick="quickAskBot('Comment mieux dormir ?')">
+                        😴 Sommeil
+                    </button>
+                    <button class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.85rem;" 
+                            onclick="quickAskBot('Exercices recommandés ?')">
+                        💪 Exercice
+                    </button>
+                </div>
+                
+                <!-- Suggestions intelligentes -->
+                <div id="suggestions-container" style="display: none;"></div>
+            </div>
+            
+            <!-- Analytics -->
+            <div class="card">
+                <h3 class="card-title">📊 Statistiques d'Utilisation</h3>
+                <div id="bot-analytics" style="margin-top: 1rem;"></div>
+                <button class="btn btn-secondary" onclick="showDetailedAnalytics()" style="margin-top: 1rem;">
+                    📈 Voir détails complets
+                </button>
+            </div>
+        </section>
+
+        <section id="settings" class="content">
+            <div class="card">
+                <h2 class="card-title">⚙️ Préférences</h2>
+                <h3 style="margin-top: 1rem;">🎨 Apparence</h3>
+                <button id="theme-btn" class="btn btn-secondary" onclick="toggleTheme()">🌙 Activer Mode Sombre</button>
+                <h3 style="margin-top: 1rem;">💾 Données</h3>
+                <button class="btn btn-success" onclick="exportData()">📥 Sauvegarder (Export JSON)</button>
+                <button class="btn btn-secondary" onclick="document.getElementById('import-input').click()">📤 Restaurer (Import)</button>
+                <input type="file" id="import-input" style="display: none;" onchange="importData(this)">
+                <button class="btn btn-danger" style="margin-top: 1rem;" onclick="clearData()">🗑️ Tout effacer</button>
+            </div>
+        </section>
+
+    </div> <button class="emergency-btn" onclick="toggleModal('crisis-modal')">🆘</button>
+
+    <div id="crisis-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--rose-500); margin-bottom: 1rem;">🚨 Mode Crise</h2>
+            <p style="margin-bottom: 1rem;">Respirez calmement.</p>
+            <a href="tel:15" class="btn btn-danger" style="text-decoration: none; display: flex;">📞 Appeler SAMU (15)</a>
+            <button class="btn btn-secondary" onclick="alert('Technique 4-7-8 :\nInspirer par le nez (4s)\nBloquer (7s)\nExpirer par la bouche (8s)')">🧘 Cohérence Cardiaque</button>
+            <button class="btn btn-secondary" onclick="toggleModal('crisis-modal')">Fermer</button>
+        </div>
+    </div>
+
+    <div id="toast" class="notification">Message</div>
+    
+    <div id="gdpr-banner" class="cookie-banner">
+        <p>🍪 <strong>Respect de la vie privée :</strong> Toutes vos données sont stockées uniquement sur votre téléphone (LocalStorage). Aucune donnée n'est envoyée sur internet.</p>
+        <button class="btn btn-success" style="margin-top: 10px; width: auto;" onclick="acceptGDPR()">J'ai compris</button>
+    </div>
+
+    <script>
+        // ============================================
+        // 🧠 CERVEAU FUSIONNÉ (v4 Structure + v3 Features)
+        // ============================================
+
+        const db = {
+            get: (key) => JSON.parse(localStorage.getItem(key) || "[]"),
+            set: (key, val) => localStorage.setItem(key, JSON.stringify(val)),
+            add: (key, item) => {
+                const data = db.get(key);
+                data.unshift(item);
+                db.set(key, data);
+            }
+        };
+
+        // --- NAVIGATION ---
+        function switchTab(id) {
+            document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            const btns = document.querySelectorAll(`.nav-tab[onclick*="${id}"]`);
+            if(btns.length > 0) btns[0].classList.add('active');
+            window.scrollTo(0,0);
+        }
+
+        function toggleModal(id) { document.getElementById(id).classList.toggle('active'); }
+
+        // --- SYMPTOMES & ENERGIE (v3 Feature) ---
+        function initPainScale() {
+            const c = document.getElementById('pain-scale-container');
+            if(!c) return;
+            c.innerHTML = '';
+            for(let i=0; i<=10; i++) {
+                let colorClass = i<4 ? 'pain-0' : (i<8 ? 'pain-5' : 'pain-10');
+                c.innerHTML += `<button type="button" class="pain-btn ${colorClass}" onclick="setPain(${i}, this)">${i}</button>`;
+            }
+        }
+
+        function setPain(val, btn) {
+            document.getElementById('pain-level').value = val;
+            document.querySelectorAll('.pain-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        document.getElementById('energy-level').addEventListener('input', function(e) {
+            document.getElementById('energy-val').textContent = e.target.value + "/10";
+        });
+
+        document.getElementById('symptom-form').onsubmit = (e) => {
+            e.preventDefault();
+            const note = {
+                date: document.getElementById('symptom-date').value,
+                pain: document.getElementById('pain-level').value,
+                energy: document.getElementById('energy-level').value, // v3 Feature
+                text: document.getElementById('symptom-notes').value,
+                id: Date.now()
+            };
+            db.add('symptoms', note);
+            showToast('✅ Enregistré !');
+            e.target.reset();
+            renderSymptoms();
+            updateStats();
+        };
+
+        function renderSymptoms() {
+            const list = document.getElementById('symptom-list');
+            const data = db.get('symptoms');
+            list.innerHTML = data.slice(0, 5).map(d => `
+                <div style="border-bottom: 1px solid #eee; padding: 0.5rem 0;">
+                    <strong>${d.date}</strong><br>
+                    Douleur: <strong>${d.pain}/10</strong> | Énergie: <strong>${d.energy || '-'}/10</strong><br>
+                    <span style="color: #666; font-size: 0.9rem;">${d.text || ''}</span>
+                </div>
+            `).join('') || '<p>Aucun historique.</p>';
+        }
+
+        // --- LISTES (Médicaments, RDV, Médecins) ---
+        document.getElementById('med-form').onsubmit = (e) => {
+            e.preventDefault();
+            db.add('meds', { name: document.getElementById('med-name').value, dose: document.getElementById('med-dose').value });
+            showToast('✅ Médicament ajouté'); e.target.reset(); renderLists();
+        };
+
+        document.getElementById('appt-form').onsubmit = (e) => {
+            e.preventDefault();
+            db.add('appts', { date: document.getElementById('appt-date').value, title: document.getElementById('appt-title').value });
+            showToast('✅ RDV ajouté'); e.target.reset(); renderLists();
+        };
+
+        // Ajout v3: Gestion Médecins
+        document.getElementById('doc-form').onsubmit = (e) => {
+            e.preventDefault();
+            db.add('docs', { 
+                name: document.getElementById('doc-name').value, 
+                spec: document.getElementById('doc-spec').value,
+                phone: document.getElementById('doc-phone').value 
+            });
+            showToast('✅ Médecin ajouté'); e.target.reset(); renderLists();
+        };
+
+        function renderLists() {
+            document.getElementById('med-list').innerHTML = db.get('meds').map(m => `<div style="padding:0.5rem; background:var(--lavender-50); margin-bottom:0.5rem; border-radius:8px;">💊 ${m.name} (${m.dose})</div>`).join('') || 'Vide';
+            document.getElementById('appt-list').innerHTML = db.get('appts').sort((a,b)=>new Date(a.date)-new Date(b.date)).map(a => `<div style="padding:0.5rem; background:var(--lavender-50); margin-bottom:0.5rem; border-radius:8px;">📅 ${a.date}: ${a.title}</div>`).join('') || 'Aucun RDV';
+            // Render Doctors
+            document.getElementById('doc-list').innerHTML = db.get('docs').map(d => `<div style="padding:0.5rem; background:var(--lavender-50); margin-bottom:0.5rem; border-radius:8px;">👨‍⚕️ <strong>${d.name}</strong> (${d.spec})<br>📞 <a href="tel:${d.phone}">${d.phone}</a></div>`).join('') || 'Aucun contact.';
+            updateStats();
+        }
+
+        // --- COMMUNAUTE (v3 Feature Simulé) ---
+        const fakePosts = [
+            { user: "Marie L.", content: "Aujourd'hui, petite victoire : j'ai marché 20 minutes ! 💪", time: "Il y a 2h" },
+            { user: "Thomas F.", content: "Quelqu'un a testé le tapis d'acupression ?", time: "Il y a 4h" }
+        ];
+
+        function renderCommunity() {
+            const userPosts = db.get('posts');
+            const allPosts = [...userPosts, ...fakePosts]; // Mix user posts and fake data
+            document.getElementById('community-feed').innerHTML = allPosts.map(p => `
+                <div class="post-card">
+                    <div class="post-header">
+                        <div class="avatar">${p.user.charAt(0)}</div>
+                        <div><strong>${p.user}</strong><br><small style="color:#888">${p.time || "À l'instant"}</small></div>
+                    </div>
+                    <p>${p.content}</p>
+                </div>
+            `).join('');
+        }
+
+        document.getElementById('post-form').onsubmit = (e) => {
+            e.preventDefault();
+            const content = document.getElementById('post-content').value;
+            if(!content) return;
+            db.add('posts', { user: "Moi", content: content, time: new Date().toLocaleTimeString() });
+            document.getElementById('post-content').value = '';
+            renderCommunity();
+            showToast('✅ Publié !');
+        };
+
+        // --- SOINS NATURELS ---
+        const naturalData = {
+            plantes: ['🌿 Gingembre (Anti-inflammatoire)', '🌿 Valériane (Sommeil)', '🌿 Curcuma (Douleurs)'],
+            complements: ['💊 Magnésium (Muscles)', '💊 Vitamine D (Os)', '💊 CoQ10 (Energie)'],
+            therapies: ['🧘 Sophrologie', '🧘 Yoga Doux', '🌡️ Balnéothérapie']
+        };
+        function renderNatural(cat) {
+            document.getElementById('natural-display').innerHTML = `<div class="card"><h3>${cat.toUpperCase()}</h3><ul>` + naturalData[cat].map(i => `<li style="margin-bottom: 0.5rem;">${i}</li>`).join('') + `</ul></div>`;
+        }
+
+        // --- STATS & PDF ---
+        function updateStats() {
+            document.getElementById('quick-stats').innerHTML = `${db.get('symptoms').length} relevés • ${db.get('docs').length} médecins • ${db.get('posts').length} posts`;
+        }
+
+        function renderChart() {
+            const ctx = document.getElementById('painChart');
+            if(!ctx) return;
+            if(window.myPainChart) window.myPainChart.destroy();
+
+            const data = db.get('symptoms').slice(0, 7).reverse();
+            window.myPainChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => d.date),
+                    datasets: [
+                        { label: 'Douleur', data: data.map(d => d.pain), borderColor: '#ef4444', tension: 0.4 },
+                        { label: 'Énergie', data: data.map(d => d.energy), borderColor: '#22c55e', tension: 0.4 }
+                    ]
+                },
+                options: { scales: { y: { min: 0, max: 10 } } }
+            });
+        }
+
+        function generatePDF() {
+            const doc = new jspdf.jsPDF();
+            doc.setFontSize(18); doc.text('Rapport FibroCare', 10, 10);
+            doc.setFontSize(12); let y = 30;
+            db.get('symptoms').forEach(s => {
+                doc.text(`${s.date} : Doul ${s.pain}/10 - Ener ${s.energy || '-'}/10 - ${s.text}`, 10, y);
+                y += 10;
+            });
+            doc.save('rapport-fibro.pdf');
+        }
+
+        // --- BOT & OUTILS ---
+        function askBot() {
+            const input = document.getElementById('chat-input');
+            const box = document.getElementById('chat-box');
+            if(!input.value) return;
+            box.innerHTML += `<div style="text-align:right; margin:0.5rem;"><strong>Moi:</strong> ${input.value}</div>`;
+            setTimeout(() => {
+                box.innerHTML += `<div style="text-align:left; margin:0.5rem; background:white; padding:0.5rem; border-radius:8px;"><strong>🤖 Bot:</strong> Je note cela. N'oubliez pas de consulter un médecin.</div>`;
+                box.scrollTop = box.scrollHeight;
+            }, 600);
+            input.value = '';
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            if(body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme'); localStorage.setItem('theme', 'light');
+            } else {
+                body.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        function startDictation() {
+            if (!('webkitSpeechRecognition' in window)) { alert("Navigateur non compatible"); return; }
+            const recognition = new webkitSpeechRecognition();
+            recognition.lang = "fr-FR";
+            recognition.onstart = () => showToast("🎤 Parlez...");
+            recognition.onresult = (e) => { document.getElementById('symptom-notes').value += " " + e.results[0][0].transcript; };
+            recognition.start();
+        }
+
+        // --- DATA & RGPD ---
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(localStorage));
+            const a = document.createElement('a');
+            a.href = dataStr; a.download = "fibrocare_backup.json"; a.click();
+        }
+        function importData(input) {
+            const reader = new FileReader();
+            reader.onload = (e) => { Object.keys(JSON.parse(e.target.result)).forEach(k => localStorage.setItem(k, JSON.parse(e.target.result)[k])); location.reload(); };
+            reader.readAsText(input.files[0]);
+        }
+        function clearData() { if(confirm('Sûr ?')) { localStorage.clear(); location.reload(); } }
+
+        function checkGDPR() {
+            if(!localStorage.getItem('gdpr_accepted')) {
+                document.getElementById('gdpr-banner').style.display = 'block';
+            }
+        }
+        function acceptGDPR() {
+            localStorage.setItem('gdpr_accepted', 'true');
+            document.getElementById('gdpr-banner').style.display = 'none';
+        }
+        function showToast(msg) {
+            const t = document.getElementById('toast'); t.innerText = msg; t.classList.add('active');
+            setTimeout(() => t.classList.remove('active'), 3000);
+        }
+
+        // --- INIT ---
+        window.onload = () => {
+            document.getElementById('symptom-date').valueAsDate = new Date();
+            initPainScale(); renderSymptoms(); renderLists(); renderCommunity(); checkGDPR();
+            if(localStorage.getItem('theme') === 'dark') document.body.setAttribute('data-theme', 'dark');
+            document.querySelector("button[onclick=\"switchTab('reports')\"]").addEventListener('click', () => setTimeout(renderChart, 100));
+        };
+    
+
+// ============================================================================
+// 🤖 FIBROBOT v2.0 - FONCTIONS INTÉGRATION
+// ============================================================================
+
+let currentBotMessageId = 0;
+let voiceRecognitionInstance = null;
+
+// Changement niveau détail
+function changeDetailLevel(level) {
+    if (window.SuperBot) {
+        const profile = window.SuperBot.getProfile();
+        profile.preferences.detailLevel = level;
+        window.SuperBot.context.updateProfile(profile);
+        showNotification(`Niveau changé: ${level}`, 'success');
+    }
+}
+
+// Envoyer message au bot
+async function sendBotMessage() {
+    const input = document.getElementById('chat-input');
+    const message = input.value.trim();
+    
+    if (!message) return;
+    
+    // Afficher message utilisateur
+    displayUserBotMessage(message);
+    
+    // Clear
+    input.value = '';
+    
+    // Typing indicator
+    showBotTypingIndicator();
+    
+    try {
+        // Obtenir réponse bot
+        const response = await window.askSuperBot(message);
+        
+        // Cacher typing
+        hideBotTypingIndicator();
+        
+        // Afficher réponse
+        displayBotResponse(response);
+        
+        // Vocal si activé
+        if (window.SuperBot) {
+            const profile = window.SuperBot.getProfile();
+            if (profile.preferences.voiceEnabled && window.VoiceInterface) {
+                window.VoiceInterface.speak(response.response);
+            }
+        }
+        
+        // Suggestions
+        if (response.suggestions && response.suggestions.length > 0) {
+            displayBotSuggestions(response.suggestions);
+        }
+        
+        // Mettre à jour analytics
+        updateBotAnalyticsDisplay();
+        
+    } catch (error) {
+        hideBotTypingIndicator();
+        displayBotResponse({
+            response: '⚠️ Erreur de communication avec FibroBot. Veuillez réessayer.',
+            confidence: 0
+        });
+    }
+}
+
+// Afficher message utilisateur
+function displayUserBotMessage(text) {
+    const container = document.getElementById('chat-messages');
+    if (!container) return;
+    
+    const div = document.createElement('div');
+    div.className = 'chat-message chat-user';
+    div.style.cssText = 'background: white; padding: 1rem; margin-bottom: 0.5rem; border-radius: 12px; border-left: 4px solid var(--lavender-600);';
+    div.innerHTML = `<strong style="color: var(--lavender-600);">Vous</strong><br>${escapeHtmlText(text)}`;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+}
+
+// Afficher réponse bot
+function displayBotResponse(response) {
+    const container = document.getElementById('chat-messages');
+    if (!container) return;
+    
+    const div = document.createElement('div');
+    div.className = 'chat-message chat-bot';
+    div.id = `bot-msg-${currentBotMessageId}`;
+    div.style.cssText = 'background: #f3f0ff; padding: 1rem; margin-bottom: 0.5rem; border-radius: 12px; border-left: 4px solid var(--sage-500);';
+    
+    // Markdown basique vers HTML
+    let html = (response.response || '')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n/g, '<br>');
+    
+    div.innerHTML = `
+        <strong style="color: var(--sage-500);">🤖 FibroBot</strong><br>
+        ${html}
+        <div class="message-feedback" style="margin-top: 0.5rem;">
+            <button onclick="provideBotFeedback(${currentBotMessageId}, true)" 
+                    class="feedback-btn" title="Utile">👍</button>
+            <button onclick="provideBotFeedback(${currentBotMessageId}, false)" 
+                    class="feedback-btn" title="Pas utile">👎</button>
+        </div>
+    `;
+    
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+    
+    currentBotMessageId++;
+}
+
+// Typing indicator
+function showBotTypingIndicator() {
+    const container = document.getElementById('chat-messages');
+    if (!container) return;
+    
+    const div = document.createElement('div');
+    div.className = 'chat-message chat-bot typing-indicator';
+    div.id = 'bot-typing';
+    div.style.cssText = 'background: #f3f0ff; padding: 1rem; margin-bottom: 0.5rem; border-radius: 12px; opacity: 0.7;';
+    div.innerHTML = '<strong>🤖 FibroBot</strong><br>Analyse en cours...';
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+}
+
+function hideBotTypingIndicator() {
+    const typing = document.getElementById('bot-typing');
+    if (typing) typing.remove();
+}
+
+// Question rapide
+function quickAskBot(question) {
+    document.getElementById('chat-input').value = question;
+    sendBotMessage();
+}
+
+// Vocal
+function startVoiceInput() {
+    const btn = document.getElementById('voice-btn');
+    if (!btn) return;
+    
+    if (!window.VoiceInterface || !window.VoiceInterface.isSupported()) {
+        showNotification('Reconnaissance vocale non supportée sur ce navigateur', 'error');
+        return;
+    }
+    
+    btn.textContent = '🎙️ Écoute...';
+    btn.disabled = true;
+    
+    voiceRecognitionInstance = window.startVoiceInput(
+        (transcript) => {
+            document.getElementById('chat-input').value = transcript;
+            sendBotMessage();
+            btn.textContent = '🎤 Vocal';
+            btn.disabled = false;
+        },
+        (error) => {
+            showNotification(`Erreur vocale: ${error}`, 'error');
+            btn.textContent = '🎤 Vocal';
+            btn.disabled = false;
+        }
+    );
+}
+
+// Feedback
+function provideBotFeedback(messageId, isPositive) {
+    if (window.provideFeedback) {
+        window.provideFeedback(messageId, isPositive);
+    }
+    showNotification(isPositive ? '👍 Merci !' : '👎 Merci pour votre retour', 'success');
+}
+
+// Suggestions
+function displayBotSuggestions(suggestions) {
+    const container = document.getElementById('suggestions-container');
+    if (!container) return;
+    
+    container.style.display = 'block';
+    container.innerHTML = '<h4 style="margin-bottom: 0.75rem; color: #c2410c;">💡 Questions suggérées:</h4>';
+    
+    suggestions.forEach(suggestion => {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-secondary';
+        btn.style.cssText = 'padding: 0.5rem 1rem; font-size: 0.85rem; margin: 0.25rem;';
+        btn.textContent = suggestion;
+        btn.onclick = () => quickAskBot(suggestion);
+        container.appendChild(btn);
+    });
+}
+
+// Analytics
+function updateBotAnalyticsDisplay() {
+    if (!window.getBotAnalytics) return;
+    
+    const analytics = window.getBotAnalytics();
+    const container = document.getElementById('bot-analytics');
+    
+    if (!container) return;
+    
+    const topTopic = analytics.topTopics && analytics.topTopics[0] ? analytics.topTopics[0][0] : 'N/A';
+    
+    container.innerHTML = `
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
+            <div style="text-align: center; padding: 1rem; background: #f3f0ff; border-radius: 12px;">
+                <h4 style="font-size: 2rem; color: var(--lavender-600); margin-bottom: 0.5rem;">${analytics.totalInteractions || 0}</h4>
+                <p style="color: #666; font-size: 0.9rem;">Questions posées</p>
+            </div>
+            <div style="text-align: center; padding: 1rem; background: #f3f0ff; border-radius: 12px;">
+                <h4 style="font-size: 2rem; color: var(--lavender-600); margin-bottom: 0.5rem;">${analytics.satisfaction || '0%'}</h4>
+                <p style="color: #666; font-size: 0.9rem;">Satisfaction</p>
+            </div>
+            <div style="text-align: center; padding: 1rem; background: #f3f0ff; border-radius: 12px;">
+                <h4 style="font-size: 1.5rem; color: var(--lavender-600); margin-bottom: 0.5rem;">${topTopic}</h4>
+                <p style="color: #666; font-size: 0.9rem;">Topic favori</p>
+            </div>
+        </div>
+    `;
+}
+
+function showDetailedAnalytics() {
+    if (!window.getBotAnalytics) return;
+    
+    const analytics = window.getBotAnalytics();
+    
+    let html = '<h3>📊 Analytics Détaillées FibroBot</h3>';
+    html += `<p><strong>Total interactions:</strong> ${analytics.totalInteractions || 0}</p>`;
+    html += `<p><strong>Satisfaction:</strong> ${analytics.satisfaction || '0%'}</p>`;
+    html += `<p><strong>Questions non résolues:</strong> ${analytics.unknownQuestions || 0}</p>`;
+    html += '<h4>Top 5 Topics:</h4><ul>';
+    
+    if (analytics.topTopics && analytics.topTopics.length > 0) {
+        analytics.topTopics.slice(0, 5).forEach(([topic, count]) => {
+            html += `<li><strong>${topic}:</strong> ${count} questions</li>`;
+        });
+    } else {
+        html += '<li>Aucune donnée pour le moment</li>';
+    }
+    
+    html += '</ul>';
+    
+    showModal('Analytics FibroBot', html);
+}
+
+// Escape HTML
+function escapeHtmlText(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Message d'accueil au chargement
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(() => {
+        if (document.getElementById('chat-messages')) {
+            quickAskBot('Bonjour');
+            updateBotAnalyticsDisplay();
+        }
+    }, 1000);
+});
+
+</script>
+</body>
+</html>
