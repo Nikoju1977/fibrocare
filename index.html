@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="description" content="FibroCare - Application thérapeutique pour la fibromyalgie">
     <meta name="author" content="Nicolas JULIENNE">
     <title>FibroCare 💜 v7.0 ULTIMATE with AI</title>
@@ -47,7 +47,8 @@
             color: #c0caf5;
         }
 
-        [data-theme="dark"] body { background: #1a1b26; color: #c0caf5; }
+        [data-theme="dark"] body {
+  padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px); background: #1a1b26; color: #c0caf5; }
         [data-theme="dark"] .card, [data-theme="dark"] .header, [data-theme="dark"] .nav-tab, 
         [data-theme="dark"] .form-input, [data-theme="dark"] .form-select, [data-theme="dark"] .form-textarea, 
         [data-theme="dark"] .modal-content, [data-theme="dark"] .post-card {
@@ -144,6 +145,11 @@
   .niko-loading-ring{width:48px;height:48px;border:3px solid rgba(0,255,157,.2);border-top-color:#00ff9d;border-radius:50%;animation:niko-spin .8s linear infinite}
   @keyframes niko-spin{to{transform:rotate(360deg)}}
   .niko-loading.hidden{opacity:0;pointer-events:none;transition:opacity .3s}
+
+/* ── Skeleton Loader ─────────────────────────── */
+.skeleton{background:linear-gradient(90deg,rgba(0,255,157,.07) 25%,rgba(0,255,157,.15) 50%,rgba(0,255,157,.07) 75%);background-size:200% 100%;animation:skel-wave 1.4s infinite;border-radius:6px;min-height:1em}
+@keyframes skel-wave{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
 </style>
 
     <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIkZpYnJvQ2FyZSAtIEFwcGxpY2F0aW9uIEZpYnJvbXlhbGdpZSIsCiAgInNob3J0X25hbWUiOiAiRmlicm9DYXJlIiwKICAiZGVzY3JpcHRpb24iOiAiVm90cmUgY29tcGFnbm9uIGZpYnJvbXlhbGdpZSIsCiAgInN0YXJ0X3VybCI6ICIvIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjZmFmOGZmIiwKICAidGhlbWVfY29sb3IiOiAiIzdjNGRmZiIsCiAgImljb25zIjogW10KfQ==">
@@ -2491,8 +2497,6 @@ if (typeof module !== 'undefined' && module.exports) {
     };
 }
 
-console.log('🧠 FibroBot v2.0 SUPERINTELLIGENT chargé !');
-
     </script>
     
   <meta property="og:title" content="FibroCare | Studio Niko Design">
@@ -2501,7 +2505,9 @@ console.log('🧠 FibroBot v2.0 SUPERINTELLIGENT chargé !');
   <meta name="theme-color" content="#c084fc">
 </head>
 
-<body>
+<body role="application" aria-label="FibroCare — Accompagnement fibromyalgie">
+<main id="app" tabindex="-1">
+
     <div class="app">
         
         <header class="header">
@@ -3266,5 +3272,24 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <div class="niko-loading hidden" id="nikoLoader"><div class="niko-loading-ring"></div></div>
+
+</main>
+
+<script>
+if('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    const swCode = `
+const CACHE='niko-v1';
+const ASSETS=['./','/index.html'];
+self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS))));
+self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));
+self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k))))));
+    `;
+    const blob = new Blob([swCode],{type:'text/javascript'});
+    const swURL = URL.createObjectURL(blob);
+    navigator.serviceWorker.register(swURL).catch(()=>{});
+  });
+}
+</script>
 </body>
 </html>
