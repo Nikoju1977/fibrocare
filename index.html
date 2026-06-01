@@ -151,6 +151,79 @@
 @keyframes skel-wave{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
 </style>
+<script>
+
+/* ── safeStorage AES-256-GCM — Studio Niko Design ─────────────────
+   Drop-in secure replacement for localStorage.
+   Keys never leave the browser unencrypted.
+   Usage: await safeStorage.setItem(key, value)
+          await safeStorage.getItem(key)
+          await safeStorage.removeItem(key)
+─────────────────────────────────────────────────────────────────── */
+const safeStorage = (() => {
+  const SALT_KEY = '__niko_salt__';
+  const enc = new TextEncoder();
+  const dec = new TextDecoder();
+
+  async function _getKey() {
+    let salt = safeStorage.getItem(SALT_KEY);
+    if (!salt) {
+      salt = Array.from(crypto.getRandomValues(new Uint8Array(16)))
+        .map(b => b.toString(16).padStart(2,'0')).join('');
+      safeStorage.setItem(SALT_KEY, salt);
+    }
+    const keyMat = await crypto.subtle.importKey(
+      'raw', enc.encode(salt + navigator.userAgent.slice(0,32)),
+      { name:'PBKDF2' }, false, ['deriveKey']
+    );
+    return crypto.subtle.deriveKey(
+      { name:'PBKDF2', salt: enc.encode(salt), iterations:100000, hash:'SHA-256' },
+      keyMat, { name:'AES-GCM', length:256 }, false, ['encrypt','decrypt']
+    );
+  }
+
+  async function setItem(key, value) {
+    try {
+      const k = await _getKey();
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const ct = await crypto.subtle.encrypt(
+        { name:'AES-GCM', iv }, k, enc.encode(JSON.stringify(value))
+      );
+      const payload = JSON.stringify({
+        iv: Array.from(iv),
+        ct: Array.from(new Uint8Array(ct))
+      });
+      safeStorage.setItem('__enc_' + key, payload);
+    } catch(e) {
+      safeStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+    }
+  }
+
+  async function getItem(key) {
+    try {
+      const raw = safeStorage.getItem('__enc_' + key);
+      if (!raw) return safeStorage.getItem(key); // fallback unencrypted
+      const { iv, ct } = JSON.parse(raw);
+      const k = await _getKey();
+      const pt = await crypto.subtle.decrypt(
+        { name:'AES-GCM', iv: new Uint8Array(iv) }, k, new Uint8Array(ct)
+      );
+      return JSON.parse(dec.decode(pt));
+    } catch(e) {
+      return safeStorage.getItem(key);
+    }
+  }
+
+  async function removeItem(key) {
+    safeStorage.removeItem('__enc_' + key);
+    safeStorage.removeItem(key);
+  }
+
+  return { setItem, getItem, removeItem };
+})();
+
+</script>
+
 
     <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIkZpYnJvQ2FyZSAtIEFwcGxpY2F0aW9uIEZpYnJvbXlhbGdpZSIsCiAgInNob3J0X25hbWUiOiAiRmlicm9DYXJlIiwKICAiZGVzY3JpcHRpb24iOiAiVm90cmUgY29tcGFnbm9uIGZpYnJvbXlhbGdpZSIsCiAgInN0YXJ0X3VybCI6ICIvIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjZmFmOGZmIiwKICAidGhlbWVfY29sb3IiOiAiIzdjNGRmZiIsCiAgImljb25zIjogW10KfQ==">
 
@@ -1733,7 +1806,7 @@ const FIBROBOT_CONFIG = {
 class BotStorage {
     static get(key) {
         try {
-            const data = localStorage.getItem(`fibrobot_${key}`);
+            const data = safeStorage.getItem(`fibrobot_${key}`);
             return data ? JSON.parse(data) : null;
         } catch {
             return null;
@@ -1742,7 +1815,7 @@ class BotStorage {
     
     static set(key, value) {
         try {
-            localStorage.setItem(`fibrobot_${key}`, JSON.stringify(value));
+            safeStorage.setItem(`fibrobot_${key}`, JSON.stringify(value));
             return true;
         } catch {
             return false;
@@ -2763,8 +2836,8 @@ if (typeof module !== 'undefined' && module.exports) {
         // ============================================
 
         const db = {
-            get: (key) => JSON.parse(localStorage.getItem(key) || "[]"),
-            set: (key, val) => localStorage.setItem(key, JSON.stringify(val)),
+            get: (key) => JSON.parse(safeStorage.getItem(key) || "[]"),
+            set: (key, val) => safeStorage.setItem(key, JSON.stringify(val)),
             add: (key, item) => {
                 const data = db.get(key);
                 data.unshift(item);
@@ -2956,9 +3029,9 @@ if (typeof module !== 'undefined' && module.exports) {
         function toggleTheme() {
             const body = document.body;
             if(body.getAttribute('data-theme') === 'dark') {
-                body.removeAttribute('data-theme'); localStorage.setItem('theme', 'light');
+                body.removeAttribute('data-theme'); safeStorage.setItem('theme', 'light');
             } else {
-                body.setAttribute('data-theme', 'dark'); localStorage.setItem('theme', 'dark');
+                body.setAttribute('data-theme', 'dark'); safeStorage.setItem('theme', 'dark');
             }
         }
 
@@ -2979,18 +3052,18 @@ if (typeof module !== 'undefined' && module.exports) {
         }
         function importData(input) {
             const reader = new FileReader();
-            reader.onload = (e) => { Object.keys(JSON.parse(e.target.result)).forEach(k => localStorage.setItem(k, JSON.parse(e.target.result)[k])); location.reload(); };
+            reader.onload = (e) => { Object.keys(JSON.parse(e.target.result)).forEach(k => safeStorage.setItem(k, JSON.parse(e.target.result)[k])); location.reload(); };
             reader.readAsText(input.files[0]);
         }
         function clearData() { if(confirm('Sûr ?')) { localStorage.clear(); location.reload(); } }
 
         function checkGDPR() {
-            if(!localStorage.getItem('gdpr_accepted')) {
+            if(!safeStorage.getItem('gdpr_accepted')) {
                 document.getElementById('gdpr-banner').style.display = 'block';
             }
         }
         function acceptGDPR() {
-            localStorage.setItem('gdpr_accepted', 'true');
+            safeStorage.setItem('gdpr_accepted', 'true');
             document.getElementById('gdpr-banner').style.display = 'none';
         }
         function showToast(msg) {
@@ -3002,7 +3075,7 @@ if (typeof module !== 'undefined' && module.exports) {
         window.onload = () => {
             document.getElementById('symptom-date').valueAsDate = new Date();
             initPainScale(); renderSymptoms(); renderLists(); renderCommunity(); checkGDPR();
-            if(localStorage.getItem('theme') === 'dark') document.body.setAttribute('data-theme', 'dark');
+            if(safeStorage.getItem('theme') === 'dark') document.body.setAttribute('data-theme', 'dark');
             document.querySelector("button[onclick=\"switchTab('reports')\"]").addEventListener('click', () => setTimeout(renderChart, 100));
         };
     
