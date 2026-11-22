@@ -2960,11 +2960,6 @@ if (typeof module !== 'undefined' && module.exports) {
         }
 
         // --- COMMUNAUTE (v3 Feature Simulé) ---
-        const fakePosts = [
-            { user: "Marie L.", content: "Aujourd'hui, petite victoire : j'ai marché 20 minutes ! 💪", time: "Il y a 2h" },
-            { user: "Thomas F.", content: "Quelqu'un a testé le tapis d'acupression ?", time: "Il y a 4h" }
-        ];
-
         function renderCommunity() {
             const userPosts = db.get('posts');
             // L'interface est un journal local, pas un réseau social connecté.
@@ -3040,7 +3035,7 @@ if (typeof module !== 'undefined' && module.exports) {
             const input = document.getElementById('chat-input');
             const box = document.getElementById('chat-box');
             if(!input.value) return;
-            box.innerHTML += `<div style="text-align:right; margin:0.5rem;"><strong>Moi:</strong> ${input.value}</div>`;
+            box.innerHTML += `<div style="text-align:right; margin:0.5rem;"><strong>Moi:</strong> ${escapeHtmlText(input.value)}</div>`;
             setTimeout(() => {
                 box.innerHTML += `<div style="text-align:left; margin:0.5rem; background:white; padding:0.5rem; border-radius:8px;"><strong>🤖 Bot:</strong> Je note cela. N'oubliez pas de consulter un médecin.</div>`;
                 box.scrollTop = box.scrollHeight;
@@ -3203,7 +3198,7 @@ function displayBotResponse(response) {
     div.style.cssText = 'background: #f3f0ff; padding: 1rem; margin-bottom: 0.5rem; border-radius: 12px; border-left: 4px solid var(--sage-500);';
     
     // Markdown basique vers HTML
-    let html = (response.response || '')
+    let html = escapeHtmlText(response.response || '')
         .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
         .replace(/\n/g, '<br>');
     
