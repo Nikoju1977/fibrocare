@@ -2847,7 +2847,17 @@ if (typeof module !== 'undefined' && module.exports) {
         // ============================================
 
         const db = {
-            get: (key) => JSON.parse(safeStorage.getItem(key) || "[]"),
+            get: (key) => {
+                // Les données locales anciennes ou partiellement corrompues ne doivent
+                // jamais empêcher le démarrage du tableau de bord.
+                try {
+                    const value = JSON.parse(safeStorage.getItem(key) || "[]");
+                    return Array.isArray(value) ? value : [];
+                } catch (error) {
+                    console.warn('FibroCare : stockage local illisible pour', key);
+                    return [];
+                }
+            },
             set: (key, val) => safeStorage.setItem(key, JSON.stringify(val)),
             add: (key, item) => {
                 const data = db.get(key);
@@ -2910,9 +2920,9 @@ if (typeof module !== 'undefined' && module.exports) {
             const data = db.get('symptoms');
             list.innerHTML = data.slice(0, 5).map(d => `
                 <div style="border-bottom: 1px solid #eee; padding: 0.5rem 0;">
-                    <strong>${d.date}</strong><br>
-                    Douleur: <strong>${d.pain}/10</strong> | Énergie: <strong>${d.energy || '-'}/10</strong><br>
-                    <span style="color: #666; font-size: 0.9rem;">${d.text || ''}</span>
+                    <strong>${escapeHtmlText(d.date)}</strong><br>
+                    Douleur: <strong>${escapeHtmlText(d.pain)}/10</strong> | Énergie: <strong>${escapeHtmlText(d.energy ?? '-')}/10</strong><br>
+                    <span style="color: #666; font-size: 0.9rem;">${escapeHtmlText(d.text || '')}</span>
                 </div>
             `).join('') || '<p>Aucun historique.</p>';
         }
@@ -2942,10 +2952,10 @@ if (typeof module !== 'undefined' && module.exports) {
         };
 
         function renderLists() {
-            document.getElementById('med-list').innerHTML = db.get('meds').map(m => `<div style="padding:0.5rem; background:var(--lavender-50); margin-bottom:0.5rem; border-radius:8px;">💊 ${m.name} (${m.dose})</div>`).join('') || 'Vide';
-            document.getElementById('appt-list').innerHTML = db.get('appts').sort((a,b)=>new Date(a.date)-new Date(b.date)).map(a => `<div style="padding:0.5rem; background:var(--lavender-50); margin-bottom:0.5rem; border-radius:8px;">📅 ${a.date}: ${a.title}</div>`).join('') || 'Aucun RDV';
+            document.getElementById('med-list').innerHTML = db.get('meds').map(m => `<div style="padding:0.5rem; background:var(--lavender-50); margin-bottom:0.5rem; border-radius:8px;">💊 ${escapeHtmlText(m.name)} (${escapeHtmlText(m.dose)})</div>`).join('') || 'Vide';
+            document.getElementById('appt-list').innerHTML = db.get('appts').sort((a,b)=>new Date(a.date)-new Date(b.date)).map(a => `<div style="padding:0.5rem; background:var(--lavender-50); margin-bottom:0.5rem; border-radius:8px;">📅 ${escapeHtmlText(a.date)}: ${escapeHtmlText(a.title)}</div>`).join('') || 'Aucun RDV';
             // Render Doctors
-            document.getElementById('doc-list').innerHTML = db.get('docs').map(d => `<div style="padding:0.5rem; background:var(--lavender-50); margin-bottom:0.5rem; border-radius:8px;">👨‍⚕️ <strong>${d.name}</strong> (${d.spec})<br>📞 <a href="tel:${d.phone}">${d.phone}</a></div>`).join('') || 'Aucun contact.';
+            document.getElementById('doc-list').innerHTML = db.get('docs').map(d => `<div style="padding:0.5rem; background:var(--lavender-50); margin-bottom:0.5rem; border-radius:8px;">👨‍⚕️ <strong>${escapeHtmlText(d.name)}</strong> (${escapeHtmlText(d.spec)})<br>📞 <a href="tel:${String(d.phone||'').replace(/[^+\d]/g,'')}">${escapeHtmlText(d.phone)}</a></div>`).join('') || 'Aucun contact.';
             updateStats();
         }
 
@@ -2957,16 +2967,17 @@ if (typeof module !== 'undefined' && module.exports) {
 
         function renderCommunity() {
             const userPosts = db.get('posts');
-            const allPosts = [...userPosts, ...fakePosts]; // Mix user posts and fake data
+            // L'interface est un journal local, pas un réseau social connecté.
+            const allPosts = userPosts;
             document.getElementById('community-feed').innerHTML = allPosts.map(p => `
                 <div class="post-card">
                     <div class="post-header">
-                        <div class="avatar">${p.user.charAt(0)}</div>
-                        <div><strong>${p.user}</strong><br><small style="color:#888">${p.time || "À l'instant"}</small></div>
+                        <div class="avatar">${escapeHtmlText(String(p.user || '?').charAt(0))}</div>
+                        <div><strong>${escapeHtmlText(p.user)}</strong><br><small style="color:#888">${escapeHtmlText(p.time || "À l'instant")}</small></div>
                     </div>
-                    <p>${p.content}</p>
+                    <p>${escapeHtmlText(p.content)}</p>
                 </div>
-            `).join('');
+            `).join('') || '<p>Aucun message enregistré sur cet appareil.</p>';
         }
 
         document.getElementById('post-form').onsubmit = (e) => {
@@ -2976,7 +2987,7 @@ if (typeof module !== 'undefined' && module.exports) {
             db.add('posts', { user: "Moi", content: content, time: new Date().toLocaleTimeString() });
             document.getElementById('post-content').value = '';
             renderCommunity();
-            showToast('✅ Publié !');
+            showToast('✅ Message enregistré localement. Aucun envoi public.');
         };
 
         // --- SOINS NATURELS ---
@@ -2991,7 +3002,7 @@ if (typeof module !== 'undefined' && module.exports) {
 
         // --- STATS & PDF ---
         function updateStats() {
-            document.getElementById('quick-stats').innerHTML = `${db.get('symptoms').length} relevés • ${db.get('docs').length} médecins • ${db.get('posts').length} posts`;
+            document.getElementById('quick-stats').textContent = `${db.get('symptoms').length} relevés • ${db.get('docs').length} médecins • ${db.get('posts').length} messages locaux`;
         }
 
         function renderChart() {
@@ -3083,12 +3094,21 @@ if (typeof module !== 'undefined' && module.exports) {
         }
 
         // --- INIT ---
-        window.onload = () => {
+        function startFibroCare() {
             document.getElementById('symptom-date').valueAsDate = new Date();
             initPainScale(); renderSymptoms(); renderLists(); renderCommunity(); checkGDPR();
             if(safeStorage.getItem('theme') === 'dark') document.body.setAttribute('data-theme', 'dark');
-            document.querySelector("button[onclick=\"switchTab('reports')\"]").addEventListener('click', () => setTimeout(renderChart, 100));
-        };
+            const reportBtn = document.querySelector("button[onclick=\"switchTab('reports')\"]");
+            if (reportBtn) reportBtn.addEventListener('click', () => {
+                if (typeof Chart === 'function') setTimeout(renderChart, 100);
+                else showToast('Graphiques indisponibles : bibliothèque externe non chargée.');
+            });
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', startFibroCare, {once:true});
+        } else {
+            startFibroCare();
+        }
     
 
 // ============================================================================
