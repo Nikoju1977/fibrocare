@@ -2587,6 +2587,33 @@ if (typeof module !== 'undefined' && module.exports) {
   <meta property="og:description" content="Accompagnement IA fibromyalgie — suivi douleur, journal symptômes, conseils scientifiques GWAS 2025">
   <meta property="og:type" content="website">
   <meta name="theme-color" content="#c084fc" media="(prefers-color-scheme: dark)">
+<style id="studio-niko-ui-v7">
+
+/* STUDIO NIKO UI V7 — tableau de suivi sans recouvrement */
+:where(.nav-tab,.btn,.pain-btn){touch-action:manipulation;min-height:44px}
+:where(button,a,input,select,textarea):focus-visible{outline:3px solid #9265db;outline-offset:3px}
+.nav{scroll-snap-type:x proximity;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+.nav-tab{scroll-snap-align:start;white-space:nowrap;flex-shrink:0}
+:where(.card,.post-card,.modal-content){overflow-wrap:anywhere}
+:where(.form-input,.form-select,.form-textarea){max-width:100%;min-width:0}
+@media(max-width:700px){
+  .app{padding:12px}
+  .header{padding:18px 14px;margin-bottom:12px;border-radius:15px}
+  .app-title{font-size:clamp(1.55rem,6vw,2.1rem);line-height:1.2}
+  .nav{position:sticky;top:0;z-index:80;gap:7px;padding:10px 4px 12px;background:var(--lavender-50);border-radius:12px;margin-bottom:14px}
+  .nav-tab{min-height:48px;padding:11px 15px;border:1px solid var(--lavender-300);font-size:.91rem}
+  .card{padding:17px;border-radius:15px;margin-bottom:13px}
+  .card-title{font-size:1.19rem;line-height:1.35}
+  :where(.form-input,.form-select,.form-textarea,input:not([type="checkbox"]),select,textarea){font-size:16px}
+  .pain-scale{gap:8px;overscroll-behavior-x:contain}
+  .pain-btn{min-width:48px;flex-shrink:0}
+  .emergency-btn{right:calc(12px + env(safe-area-inset-right));bottom:calc(12px + env(safe-area-inset-bottom));width:60px;height:60px;font-size:1.55rem}
+  .modal{padding:12px}
+  .modal-content{max-height:calc(100dvh - 34px);overflow-y:auto}
+}
+@media(prefers-reduced-motion:reduce){.content{animation:none!important}.emergency-btn{animation:none!important}:where(.btn,.nav-tab){transition:none!important}}
+
+</style>
 </head>
 
 <body role="application" aria-label="FibroCare — Accompagnement fibromyalgie">
