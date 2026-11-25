@@ -16,6 +16,16 @@ Un journal personnel pour consigner les symptômes déclarés, observer leur év
 
 > **Prototype non validé cliniquement.** Ne pas utiliser pour une décision médicale, un diagnostic, une prescription ou une urgence. En France, danger immédiat : 15 ou 112. Inspection statique de sources uniquement ; aucun nouveau test, audit de sécurité, appel réel fournisseur, essai sur appareil ou validation clinique n'a été réalisé pour ce README.
 
+## Fiabilisation fonctionnelle — 25 novembre 2026
+
+[Correctif source](https://github.com/Nikoju1977/fibrocare/commit/9f3b3c58582d5d1e17038bba589ea512e71eb1c7). Le journal et les modules existants sont conservés. Les éléments historiques ci-dessous décrivent les limites antérieures lorsqu'ils mentionnent l'ancien export ou la pagination absente.
+
+- Sauvegarde des cinq rubriques (symptômes, médicaments déclarés, rendez-vous, contacts, messages locaux) via AES-GCM 256, dérivation PBKDF2 SHA-256 à 600 000 itérations, sel et IV aléatoires. Conversations et préférences du bot non incluses.
+- Restauration chiffrée avec validation de structure, vérification des écritures et tentative de restauration de l'état précédent en cas d'échec. Ancien format non importé. L'effacement n'appelle plus `localStorage.clear()` ; il cible les cinq clés historiques du journal, lesquelles ne sont pas isolées par application sur une origine partagée.
+- PDF avec retours à la ligne, pagination, numéros de page et conservation du score zéro. Graphiques triés par date.
+- 12 assertions JavaScript de validation des entrées ont réussi lors de la rédaction du correctif. Commit et empreinte de source relus. Aucun test navigateur, crypto bout en bout, PDF réel, mobile ni déploiement n'est revendiqué.
+- Stockage courant encore en clair ; le PDF est également en clair. La phrase secrète est demandée par une boîte de dialogue navigateur non masquée : amélioration requise. Le contenu médical embarqué reste à revoir ; données fictives exclusivement avant qualification.
+
 ## Pourquoi ce projet ?
 
 Mettre à disposition une interface légère qui distingue les observations de la personne des informations générales. L'assistant intégré exploite des règles et une base documentaire, pas un médecin virtuel ni un LLM dont l'inférence serait démontrée.
@@ -24,7 +34,7 @@ Mettre à disposition une interface légère qui distingue les observations de l
 
 - 📓 Journal des symptômes, douleur, énergie, traitements déclarés, rendez-vous et contacts.
 - 📊 Graphiques descriptifs des sept derniers relevés de douleur et d'énergie via Chart.js.
-- 📄 Rapport PDF local via jsPDF ; import/export JSON proposés dans l'interface (fonction de sauvegarde à corriger, voir ci-dessous).
+- 📄 Rapport PDF local via jsPDF ; import/export JSON chiffré du journal (implémenté, tests navigateur à réaliser).
 - 📚 Assistant documentaire par mots-clés, règles et réponses prédéfinies ; messages de communauté locale, sans réseau social démontré.
 - 🎙️ Dictée et synthèse vocale selon navigateur et permissions ; tentative de cache PWA, installation non validée.
 
@@ -53,7 +63,7 @@ flowchart TD
 ## Confidentialité et sécurité
 
 - `safeStorage` est une façade de `localStorage` avec repli mémoire ; le commentaire AES-256-GCM dans le fichier ne correspond pas au mécanisme actif. Les données sont en clair au repos. Le repli mémoire peut perdre des données à la fermeture.
-- L'export JSON sérialise la façade de stockage plutôt qu'un inventaire explicite des enregistrements : exhaustivité et restauration non démontrées. Ne pas utiliser comme unique sauvegarde. Le PDF contient des informations de santé en clair.
+- L'ancien export JSON sérialisait la façade de stockage ; le nouveau exporte explicitement les cinq rubriques, avec restauration à qualifier. Ne pas utiliser comme unique sauvegarde. Le PDF contient des informations de santé en clair.
 - Chart.js 4.4.0, jsPDF 2.5.1 et Google Fonts sont chargés depuis des CDN. Les bibliothèques s'exécutent dans la page ; la reconnaissance vocale peut dépendre d'un service distant. Pas de garantie de traitement 100 % local ni d'absence de flux réseau.
 - Le service worker est tenté via une URL Blob ; l'installation et le fonctionnement hors ligne ne sont pas établis. Une boîte de consentement ne suffit pas à prouver la conformité RGPD.
 
@@ -78,7 +88,7 @@ Cloner le dépôt et servir sa racine avec `python3 -m http.server 8000`, puis o
 | Confidentialité | Vérifier le stockage, les transmissions, le consentement et la suppression ; ne pas utiliser de données de santé réelles |
 | Informations médicales | Retirer les posologies non qualifiées ; faire vérifier les contenus et les messages d'orientation |
 
-L'inspection confirme que `generatePDF` écrit les observations successivement avec une coordonnée verticale croissante, sans pagination explicite dans cette fonction. Un rapport long peut donc être incomplet visuellement. L'export JSON ne démontre pas une sauvegarde exhaustive. Le stockage actif n'est pas chiffré.
+La pagination et le retour à la ligne sont désormais codés, ainsi que la sauvegarde explicite des cinq rubriques. Leur fonctionnement complet reste à vérifier. Le stockage actif n'est pas chiffré.
 
 **English:** Proposed checks cover descriptive records, chart fidelity, report completeness, backup recovery and privacy. Use synthetic data only. Treatment content and unencrypted storage require remediation. No new tests or clinical review were carried out.
 
