@@ -116,3 +116,12 @@ No new runtime, security or clinical validation was performed in this documentat
 [MIT](LICENSE) © 2026 Nicolas Julienne — Studio Niko Design. Les droits et mentions des dépendances tierces restent applicables. Contributions sous la licence existante. Aucun fichier de licence n'a été modifié.
 
 [Studio Niko Design — Portfolio](https://github.com/Nikoju1977)
+
+
+## Qualification navigateur — 25 novembre 2026
+
+Le [banc Chromium](tests/browser-journal.cjs) exerce les formulaires et les cinq rubriques du journal avec des données synthétiques, Web Crypto réel, sauvegarde chiffrée, refus des mots de passe incorrects, confirmation différente, ciphertext altéré, annulation de restauration, effacement limité aux rubriques, restauration et rechargement. Il vérifie également le téléchargement d'un vrai PDF multipage via jsPDF 2.5.1 (CDN existant), avec score d'énergie nul, viewport mobile simulé et absence de POST. Exécution : `node tests/browser-journal.cjs` (Node disposant de WebSocket, Chromium/Chrome et Python 3).
+
+[Workflow](.github/workflows/browser-journal.yml) · [Premier run](https://github.com/Nikoju1977/fibrocare/actions/runs/45704856308). La conclusion doit être vérifiée avant d'affirmer que les tests ont réussi. Les données actives restent en clair dans le stockage du navigateur ; le PDF est également en clair. Le test ne couvre ni la qualification clinique, ni le bot, ni les appareils physiques, ni l'indisponibilité du stockage ou du CDN.
+
+Le code applicatif conserve sa licence d'origine. Le banc de test indépendant est adapté de [NikoAssist](https://github.com/Nikoju1977/Nikoassist/blob/main/web/browser-smoke.cjs) et [OpenVita](https://github.com/Nikoju1977/OPENVITA-DT1/blob/main/tests/browser-vault.cjs), sous GPL-3.0-or-later ; [texte de licence](tests/LICENSE-GPL-3.0).
