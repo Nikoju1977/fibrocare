@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
-    <meta name="description" content="FibroCare - Application thérapeutique pour la fibromyalgie">
+    <meta name="description" content="FibroCare — journal descriptif des symptômes et rapports personnels">
     <meta name="author" content="Nicolas JULIENNE">
     <title>FibroCare 💜 v7.0 ULTIMATE with AI</title>
     
@@ -224,7 +224,7 @@ function nikoRetryBtn(container, fn) {
 </style>
 <script>
 
-/* ── safeStorage AES-256-GCM — Studio Niko Design ─────────────────
+/* ── Ancienne note de conception du stockage — Studio Niko Design ─────────────────
    Drop-in secure replacement for safeStorage.
    Keys never leave the browser unencrypted.
    Usage: await safeStorage.setItem(key, value)
@@ -2841,11 +2841,11 @@ if (typeof module !== 'undefined' && module.exports) {
                 <h2 class="card-title">⚙️ Préférences</h2>
                 <h3 style="margin-top: 1rem;">🎨 Apparence</h3>
                 <button id="theme-btn" class="btn btn-secondary" onclick="toggleTheme()">🌙 Activer Mode Sombre</button>
-                <h3 style="margin-top: 1rem;">💾 Données</h3>
-                <button class="btn btn-success" onclick="exportData()">📥 Sauvegarder (Export JSON)</button>
-                <button class="btn btn-secondary" onclick="document.getElementById('import-input').click()">📤 Restaurer (Import)</button>
+                <h3 style="margin-top: 1rem;">💾 Données</h3><p>Le journal du navigateur n’est pas chiffré au repos. La sauvegarde chiffrée inclut symptômes, médicaments déclarés, rendez-vous, contacts et messages locaux, pas les conversations du bot. Utiliser uniquement des données fictives pendant la qualification.</p>
+                <button class="btn btn-success" onclick="exportData()">📥 Sauvegarder le journal (JSON chiffré)</button>
+                <button class="btn btn-secondary" onclick="document.getElementById('import-input').click()">📤 Restaurer le journal (JSON chiffré)</button>
                 <input type="file" id="import-input" style="display: none;" onchange="importData(this)">
-                <button class="btn btn-danger" style="margin-top: 1rem;" onclick="clearData()">🗑️ Tout effacer</button>
+                <button class="btn btn-danger" style="margin-top: 1rem;" onclick="clearData()">🗑️ Effacer les données du journal</button>
             </div>
         </section>
 
@@ -3032,7 +3032,7 @@ if (typeof module !== 'undefined' && module.exports) {
             if(!ctx) return;
             if(window.myPainChart) window.myPainChart.destroy();
 
-            const data = db.get('symptoms').slice(0, 7).reverse();
+            const data = db.get('symptoms').filter(d => d && typeof d === 'object').slice().sort((a,b)=>String(a.date||'').localeCompare(String(b.date||''))).slice(-7);
             window.myPainChart = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -3047,14 +3047,31 @@ if (typeof module !== 'undefined' && module.exports) {
         }
 
         function generatePDF() {
-            const doc = new jspdf.jsPDF();
-            doc.setFontSize(18); doc.text('Rapport FibroCare', 10, 10);
-            doc.setFontSize(12); let y = 30;
-            db.get('symptoms').forEach(s => {
-                doc.text(`${s.date} : Doul ${s.pain}/10 - Ener ${s.energy || '-'}/10 - ${s.text}`, 10, y);
-                y += 10;
-            });
-            doc.save('rapport-fibro.pdf');
+            try {
+                if(!window.jspdf?.jsPDF) throw Error("Bibliothèque PDF indisponible.");
+                if(!confirm("Le rapport PDF n'est pas chiffré. Télécharger ?")) return;
+                const doc = new window.jspdf.jsPDF();
+                const width=doc.internal.pageSize.getWidth(), height=doc.internal.pageSize.getHeight();
+                const margin=14; let y=0;
+                function header(){
+                    doc.setFontSize(16);doc.text("FibroCare - Journal descriptif",margin,18);
+                    doc.setFontSize(10);doc.text("Observations declarees - aucune interpretation clinique",margin,25);
+                    y=36;doc.setFontSize(11);
+                }
+                function write(value){
+                    const lines=doc.splitTextToSize(String(value),width-2*margin);
+                    for(const line of lines){if(y>height-margin){doc.addPage();header();}doc.text(line,margin,y);y+=6;}
+                }
+                header();
+                const data=db.get('symptoms').filter(s=>s&&typeof s==='object');
+                if(!data.length)write("Aucune observation enregistree.");
+                for(const s of data){
+                    write(String(s.date??"-")+" | Douleur "+String(s.pain??"-")+"/10 | Energie "+String(s.energy??"-")+"/10");
+                    if(s.text)write(s.text);y+=3;
+                }
+                const pages=doc.getNumberOfPages();for(let i=1;i<=pages;i++){doc.setPage(i);doc.setFontSize(9);doc.text(i+" / "+pages,width-margin,height-7,{align:"right"});}
+                doc.save("rapport-fibro.pdf");
+            }catch(e){showToast("Export PDF impossible : "+e.message);}
         }
 
         // --- BOT & OUTILS ---
@@ -3089,17 +3106,79 @@ if (typeof module !== 'undefined' && module.exports) {
         }
 
         // --- DATA & RGPD ---
-        function exportData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(safeStorage));
-            const a = document.createElement('a');
-            a.href = dataStr; a.download = "fibrocare_backup.json"; a.click();
+        function validateFibroBackup(b){
+ const fields={symptoms:["date","pain","energy","text","id"],meds:["name","dose"],appts:["date","title"],docs:["name","spec","phone"],posts:["user","content","time"]};
+ if(!b||b.format!=="fibrocare-journal-v1"||!b.records||typeof b.records!=="object"||Array.isArray(b.records))throw Error("Format de sauvegarde inconnu.");
+ if(Object.keys(b.records).length!==5||Object.keys(b.records).some(k=>!Object.hasOwn(fields,k)))throw Error("Rubriques inattendues.");
+ const out={};
+ for(const [k,allowed] of Object.entries(fields)){
+  const list=b.records[k];if(!Array.isArray(list)||list.length>10000)throw Error("Rubrique invalide : "+k);
+  out[k]=list.map(item=>{
+   if(!item||typeof item!=="object"||Array.isArray(item)||Object.keys(item).some(f=>!allowed.includes(f)))throw Error("Enregistrement invalide : "+k);
+   const row={};for(const f of allowed){const v=item[f];if(v===undefined||v===null){if(k==="symptoms"&&["energy","text","id"].includes(f))continue;throw Error("Champ manquant : "+f);}
+   if(typeof v!=="string"&&typeof v!=="number")throw Error("Champ invalide : "+f);
+   if(typeof v==="number"&&!Number.isFinite(v))throw Error("Nombre invalide.");
+   if(String(v).length>20000)throw Error("Champ trop long.");
+   if(k==="symptoms"&&["pain","energy"].includes(f)){if(String(v).trim()===""||!Number.isFinite(Number(v))||Number(v)<0||Number(v)>10)throw Error("Score hors plage.");}
+   row[f]=v;
+   }return row;
+  });
+ }
+ return out;
+}
+        const journalKeys = ["symptoms","meds","appts","docs","posts"];
+        let backupBusy=false;
+        const backupEncoder=new TextEncoder(),backupDecoder=new TextDecoder("utf-8",{fatal:true});
+        function backupB64(a){let s="";for(let i=0;i<a.length;i+=8192)s+=String.fromCharCode(...a.subarray(i,i+8192));return btoa(s);}
+        function backupUn64(s){if(typeof s!=="string")throw Error("Encodage invalide.");return Uint8Array.from(atob(s),v=>v.charCodeAt(0));}
+        async function backupKey(pass,salt){
+            if(!globalThis.crypto?.subtle)throw Error("Chiffrement indisponible : HTTPS ou localhost requis.");
+            const raw=await crypto.subtle.importKey("raw",backupEncoder.encode(pass),"PBKDF2",false,["deriveKey"]);
+            return crypto.subtle.deriveKey({name:"PBKDF2",hash:"SHA-256",salt,iterations:600000},raw,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
         }
-        function importData(input) {
-            const reader = new FileReader();
-            reader.onload = (e) => { Object.keys(JSON.parse(e.target.result)).forEach(k => safeStorage.setItem(k, JSON.parse(e.target.result)[k])); location.reload(); };
-            reader.readAsText(input.files[0]);
+        function backupPassword(){
+            const pass=prompt("Phrase secrète de sauvegarde (12 caractères minimum). Ne pas utiliser votre mot de passe habituel.");
+            if(pass===null)return null;if(pass.length<12||pass.length>256)throw Error("Phrase secrète invalide.");return pass;
         }
-        function clearData() { if(confirm('Sûr ?')) { safeStorage.clear(); location.reload(); } }
+        async function exportData(){
+            if(backupBusy)return;backupBusy=true;
+            try{
+                const pass=backupPassword();if(pass===null)return;
+                if(prompt("Confirmer la phrase secrète de sauvegarde.")!==pass)throw Error("Les phrases secrètes diffèrent.");
+                const records={};for(const k of journalKeys){const raw=safeStorage.getItem(k);records[k]=raw===null?[]:JSON.parse(raw);}
+                const payload={format:"fibrocare-journal-v1",records:validateFibroBackup({format:"fibrocare-journal-v1",records})};
+                const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12));
+                const bytes=new Uint8Array(await crypto.subtle.encrypt({name:"AES-GCM",iv},await backupKey(pass,salt),backupEncoder.encode(JSON.stringify(payload))));
+                const body=JSON.stringify({format:"fibrocare-encrypted-v1",salt:backupB64(salt),iv:backupB64(iv),ciphertext:backupB64(bytes)});
+                const url=URL.createObjectURL(new Blob([body],{type:"application/json"})),a=document.createElement("a");
+                a.href=url;a.download="fibrocare-journal-chiffre.json";document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+                showToast("Téléchargement demandé. Vérifiez le fichier.");
+            }catch(e){showToast("Sauvegarde impossible : "+e.message);}finally{backupBusy=false;}
+        }
+        async function importData(input){
+            if(backupBusy){input.value="";return;}backupBusy=true;
+            try{
+                const f=input.files[0];if(!f)return;if(f.size>20000000)throw Error("Fichier trop volumineux (20 Mo maximum).");
+                const w=JSON.parse(await f.text());if(w?.format!=="fibrocare-encrypted-v1")throw Error("Sauvegarde chiffrée FibroCare requise.");
+                const pass=backupPassword();if(pass===null)return;
+                const salt=backupUn64(w.salt),iv=backupUn64(w.iv),cipher=backupUn64(w.ciphertext);
+                if(salt.length!==16||iv.length!==12||cipher.length<16)throw Error("Sauvegarde invalide.");
+                let plain;try{plain=await crypto.subtle.decrypt({name:"AES-GCM",iv},await backupKey(pass,salt),cipher);}catch{throw Error("Phrase secrète incorrecte ou sauvegarde altérée.");}
+                const records=validateFibroBackup(JSON.parse(backupDecoder.decode(plain)));
+                if(!confirm("Remplacer les cinq rubriques du journal par cette sauvegarde ?"))return;
+                const before=Object.fromEntries(journalKeys.map(k=>[k,safeStorage.getItem(k)]));
+                try{for(const k of journalKeys){const value=JSON.stringify(records[k]);safeStorage.setItem(k,value);if(safeStorage.getItem(k)!==value)throw Error("Écriture impossible : "+k);}}
+                catch(e){for(const k of journalKeys){if(before[k]===null)safeStorage.removeItem(k);else safeStorage.setItem(k,before[k]);}throw Error("Restauration interrompue ; vérifier le journal avant de quitter.");}
+                renderSymptoms();renderLists();renderCommunity();updateStats();if(window.myPainChart&&typeof Chart==="function")renderChart();
+                showToast("Journal restauré.");
+            }catch(e){showToast("Restauration impossible : "+e.message);}finally{backupBusy=false;input.value="";}
+        }
+        function clearData(){
+            if(backupBusy||!confirm("Effacer symptômes, médicaments déclarés, rendez-vous, contacts et messages locaux ? Les autres réglages et conversations du bot sont conservés."))return;
+            for(const k of journalKeys)safeStorage.removeItem(k);
+            if(journalKeys.some(k=>safeStorage.getItem(k)!==null)){showToast("Effacement incomplet. Vérifiez le stockage.");return;}
+            renderSymptoms();renderLists();renderCommunity();updateStats();if(window.myPainChart&&typeof Chart==="function")renderChart();showToast("Journal effacé.");
+        }
 
         function checkGDPR() {
             if(!safeStorage.getItem('gdpr_accepted')) {
