@@ -1,0 +1,28 @@
+name: FibroCare - journal and PDF browser tests
+on:
+  push:
+    paths:
+      - 'index.html'
+      - 'tests/**'
+      - '.github/workflows/browser-journal.yml'
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'tests/**'
+      - '.github/workflows/browser-journal.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  chromium-journal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Check Node and Chrome
+        run: |
+          node --version
+          google-chrome --version
+          node -e 'if(typeof WebSocket!=="function")process.exit(1)'
+      - name: Browser journal, Web Crypto and PDF (synthetic data)
+        run: node tests/browser-journal.cjs
