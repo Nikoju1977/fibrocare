@@ -12,7 +12,7 @@ Un journal personnel pour consigner les symptômes déclarés, observer leur év
 
 [Démo existante (disponibilité non vérifiée)](https://nikoju1977.github.io/fibrocare/) · [English overview](#english-overview) · [Quickstart](#quickstart--démarrage-rapide)
 
-> [Insérer ici un GIF de démonstration avec données fictives / Insert synthetic-data demo GIF here]
+> Démonstration et qualification : données fictives uniquement. Aucun GIF ni résultat de test n'est revendiqué.
 
 > **Prototype non validé cliniquement.** Ne pas utiliser pour une décision médicale, un diagnostic, une prescription ou une urgence. En France, danger immédiat : 15 ou 112. Inspection statique de sources uniquement ; aucun nouveau test, audit de sécurité, appel réel fournisseur, essai sur appareil ou validation clinique n'a été réalisé pour ce README.
 
@@ -64,6 +64,23 @@ Les références à la qualité des dispositifs médicaux (ISO 13485), au cycle 
 ## Quickstart / Démarrage rapide
 
 Cloner le dépôt et servir sa racine avec `python3 -m http.server 8000`, puis ouvrir http://localhost:8000/. Essayer uniquement avec des données fictives, vérifier le graphique et le PDF. Ne pas saisir de données médicales réelles dans ce prototype non qualifié.
+
+## Qualification proposée — journal et confidentialité
+
+**Usage prévu de cette démonstration :** consigner et visualiser des observations fictives. Les informations thérapeutiques embarquées ne sont pas validées pour cette version ; leur retrait ou revue par des professionnels est prioritaire. Ce README ne modifie pas les recommandations affichées dans l'application.
+
+| Contrôle proposé (non exécuté) | Critère attendu |
+| --- | --- |
+| Journal | Ajouter, modifier et supprimer des observations fictives ; vérifier leur restitution fidèle |
+| Graphiques | Vérifier la correspondance entre les sept relevés et les séries, sans inférence clinique |
+| PDF | Comparer le rapport à l'intégralité des données fictives ; vérifier la pagination, le texte et les valeurs manquantes |
+| Sauvegarde JSON | Vérifier que tous les enregistrements sont effectivement exportés puis restaurés ; corriger avant de compter sur cette fonction |
+| Confidentialité | Vérifier le stockage, les transmissions, le consentement et la suppression ; ne pas utiliser de données de santé réelles |
+| Informations médicales | Retirer les posologies non qualifiées ; faire vérifier les contenus et les messages d'orientation |
+
+L'inspection confirme que `generatePDF` écrit les observations successivement avec une coordonnée verticale croissante, sans pagination explicite dans cette fonction. Un rapport long peut donc être incomplet visuellement. L'export JSON ne démontre pas une sauvegarde exhaustive. Le stockage actif n'est pas chiffré.
+
+**English:** Proposed checks cover descriptive records, chart fidelity, report completeness, backup recovery and privacy. Use synthetic data only. Treatment content and unencrypted storage require remediation. No new tests or clinical review were carried out.
 
 ## Roadmap & contribution
 
