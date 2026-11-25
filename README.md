@@ -24,7 +24,7 @@ Un journal personnel pour consigner les symptômes déclarés, observer leur év
 - Restauration chiffrée avec validation de structure, vérification des écritures et tentative de restauration de l'état précédent en cas d'échec. Ancien format non importé. L'effacement n'appelle plus `localStorage.clear()` ; il cible les cinq clés historiques du journal, lesquelles ne sont pas isolées par application sur une origine partagée.
 - PDF avec retours à la ligne, pagination, numéros de page et conservation du score zéro. Graphiques triés par date.
 - 12 assertions JavaScript de validation des entrées ont réussi lors de la rédaction du correctif. Commit et empreinte de source relus. Aucun test navigateur, crypto bout en bout, PDF réel, mobile ni déploiement n'est revendiqué.
-- Stockage courant encore en clair ; le PDF est également en clair. La phrase secrète est demandée par une boîte de dialogue navigateur non masquée : amélioration requise. Le contenu médical embarqué reste à revoir ; données fictives exclusivement avant qualification.
+- Stockage courant encore en clair ; le PDF est également en clair. La phrase secrète utilise désormais un dialogue à champ masqué et confirmation à l’export ([correctif](https://github.com/Nikoju1977/fibrocare/commit/5e0aee76c991cb3b7f72ad573e4642d298ec9341)), non testé sur navigateur. Le contenu médical embarqué reste à revoir ; données fictives exclusivement avant qualification.
 
 ## Pourquoi ce projet ?
 
