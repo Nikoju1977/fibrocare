@@ -3136,15 +3136,34 @@ if (typeof module !== 'undefined' && module.exports) {
             const raw=await crypto.subtle.importKey("raw",backupEncoder.encode(pass),"PBKDF2",false,["deriveKey"]);
             return crypto.subtle.deriveKey({name:"PBKDF2",hash:"SHA-256",salt,iterations:600000},raw,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
         }
-        function backupPassword(){
-            const pass=prompt("Phrase secrète de sauvegarde (12 caractères minimum). Ne pas utiliser votre mot de passe habituel.");
-            if(pass===null)return null;if(pass.length<12||pass.length>256)throw Error("Phrase secrète invalide.");return pass;
+        function backupPassword(confirmPassword=false){
+            return new Promise((resolve,reject)=>{
+                const dlg=document.createElement("dialog");
+                if(typeof dlg.showModal!=="function"){reject(Error("Dialogue sécurisé indisponible dans ce navigateur."));return;}
+                const form=document.createElement("form");form.method="dialog";form.style.cssText="display:grid;gap:12px;max-width:340px";
+                const title=document.createElement("h3");title.textContent=confirmPassword?"Créer une sauvegarde chiffrée":"Ouvrir une sauvegarde chiffrée";form.append(title);
+                const info=document.createElement("p");info.textContent="Phrase secrète unique de 12 à 256 caractères, non enregistrée. Impossible de récupérer une phrase oubliée.";form.append(info);
+                function field(label){
+                    const wrapper=document.createElement("label"),input=document.createElement("input");
+                    wrapper.textContent=label;input.type="password";input.required=true;input.minLength=12;input.maxLength=256;input.autocomplete=confirmPassword?"new-password":"off";input.style.cssText="display:block;width:100%;padding:10px;box-sizing:border-box";wrapper.append(input);form.append(wrapper);return input;
+                }
+                const first=field("Phrase secrète"),second=confirmPassword?field("Confirmer la phrase secrète"):null;
+                const status=document.createElement("p");status.setAttribute("role","alert");form.append(status);
+                const ok=document.createElement("button");ok.type="submit";ok.textContent="Continuer";
+                const cancel=document.createElement("button");cancel.type="button";cancel.textContent="Annuler";form.append(ok,cancel);
+                let finished=false;
+                function finish(value){if(finished)return;finished=true;first.value="";if(second)second.value="";dlg.close();dlg.remove();resolve(value);}
+                cancel.addEventListener("click",()=>finish(null));
+                dlg.addEventListener("cancel",e=>{e.preventDefault();finish(null);});
+                dlg.addEventListener("close",()=>finish(null));
+                form.addEventListener("submit",e=>{e.preventDefault();if(first.value.length<12||first.value.length>256){status.textContent="Longueur invalide.";return;}if(second&&second.value!==first.value){status.textContent="Les phrases secrètes diffèrent.";return;}finish(first.value);});
+                dlg.append(form);document.body.append(dlg);try{dlg.showModal();first.focus();}catch(e){dlg.remove();reject(e);}
+            });
         }
         async function exportData(){
             if(backupBusy)return;backupBusy=true;
             try{
-                const pass=backupPassword();if(pass===null)return;
-                if(prompt("Confirmer la phrase secrète de sauvegarde.")!==pass)throw Error("Les phrases secrètes diffèrent.");
+                const pass=await backupPassword(true);if(pass===null)return;
                 const records={};for(const k of journalKeys){const raw=safeStorage.getItem(k);records[k]=raw===null?[]:JSON.parse(raw);}
                 const payload={format:"fibrocare-journal-v1",records:validateFibroBackup({format:"fibrocare-journal-v1",records})};
                 const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12));
@@ -3160,7 +3179,7 @@ if (typeof module !== 'undefined' && module.exports) {
             try{
                 const f=input.files[0];if(!f)return;if(f.size>20000000)throw Error("Fichier trop volumineux (20 Mo maximum).");
                 const w=JSON.parse(await f.text());if(w?.format!=="fibrocare-encrypted-v1")throw Error("Sauvegarde chiffrée FibroCare requise.");
-                const pass=backupPassword();if(pass===null)return;
+                const pass=await backupPassword();if(pass===null)return;
                 const salt=backupUn64(w.salt),iv=backupUn64(w.iv),cipher=backupUn64(w.ciphertext);
                 if(salt.length!==16||iv.length!==12||cipher.length<16)throw Error("Sauvegarde invalide.");
                 let plain;try{plain=await crypto.subtle.decrypt({name:"AES-GCM",iv},await backupKey(pass,salt),cipher);}catch{throw Error("Phrase secrète incorrecte ou sauvegarde altérée.");}
